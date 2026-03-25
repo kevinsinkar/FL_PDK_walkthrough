@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlexLogger Plug-In Development Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+  :root {
+    /* ── Emerson / NI Brand Palette ── */
+    --ni-green: #00AD7C;
+    --ni-green-dark: #00573D;
+    --ni-green-light: #7CCF8B;
+    --ni-darkgreen-deep: #003325;
+    --lv-yellow: #F5D400;
+    --calc-blue: #004B8D;
+    --calc-blue-light: #1DB1DE;
+    --lv-orange: #E35B39;
+    --lv-orange-light: #F0826A;
+    --consumer-orange: #E35B39;
+    --success-green: #00AD7C;
+    --cmd-purple: #004B8D;
+    --cmd-purple-light: #1DB1DE;
+    --dark-blue: #1B2552;
+    --bg-dark: #0E1328;
+    --bg-surface: #131A36;
+    --bg-card: #182044;
+    --bg-card-hover: #1E2850;
+    --bg-elevated: #222F58;
+    --text-primary: #ECECED;
+    --text-secondary: #9FB5A4;
+    --text-muted: #637568;
+    --border-subtle: #253060;
+    --border-focus: #1DB1DE;
+    --mono: 'DM Mono', 'Consolas', monospace;
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 6px;
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.2);
+    --shadow-elevated: 0 4px 24px rgba(0,0,0,0.5);
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── SKIP LINK (Accessibility) ── */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: var(--ni-green);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    z-index: 1000;
+    transition: top var(--transition);
+  }
+  .skip-link:focus { top: 16px; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 48px 20px;
+    background: linear-gradient(180deg, #0D1328 0%, var(--bg-dark) 100%);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,173,124,0.12);
+    color: var(--ni-green-light);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(0,173,124,0.2);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  header .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 720px;
+    margin-top: 8px;
+    line-height: 1.6;
+  }
+
+  /* ── TAB NAVIGATION ── */
+  nav[role="tablist"] {
+    display: flex;
+    gap: 2px;
+    padding: 0 48px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-subtle);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  nav[role="tablist"]::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--transition), background var(--transition);
+    white-space: nowrap;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px solid transparent;
+    outline: none;
+  }
+  .tab-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.02); }
+  .tab-btn:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: -2px;
+    border-radius: 4px 4px 0 0;
+  }
+  .tab-btn[aria-selected="true"] {
+    color: var(--text-primary);
+    font-weight: 600;
+    border-bottom-color: var(--ni-green);
+    background: rgba(255,255,255,0.03);
+  }
+  .tab-step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--border-subtle);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: background var(--transition), color var(--transition);
+  }
+  .tab-btn[aria-selected="true"] .tab-step {
+    background: var(--ni-green);
+    color: #fff;
+  }
+
+  /* ── TAB PANELS ── */
+  main { padding: 36px 48px 60px; }
+  .tab-panel {
+    display: none;
+    animation: panelIn 0.35s ease;
+  }
+  .tab-panel[aria-hidden="false"] { display: block; }
+  @keyframes panelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .panel-intro {
+    max-width: 800px;
+    margin-bottom: 32px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+  .panel-intro strong { color: var(--text-primary); }
+
+  /* ── SECTION HEADERS ── */
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+  .section-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* ═══════════════════════════════════════════
+     PANEL 1: CHOOSE YOUR TEMPLATE
+     ═══════════════════════════════════════════ */
+  .template-question {
+    background: linear-gradient(135deg, #0E1A38, #0B1228);
+    border: 2px solid var(--ni-green);
+    border-radius: 16px;
+    padding: 24px 32px;
+    text-align: center;
+    box-shadow: 0 0 24px rgba(0,173,124,0.2);
+    max-width: 560px;
+    margin: 0 auto 40px;
+  }
+  .template-question h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ni-green-light);
+    margin-bottom: 4px;
+  }
+  .template-question p { font-size: 13px; color: var(--text-secondary); }
+
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto 48px;
+  }
+
+  .tpl-card {
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition);
+    cursor: pointer;
+  }
+  .tpl-card:hover { transform: translateY(-3px); }
+
+  .tpl-card.produce {
+    background: linear-gradient(145deg, #001F14, #003325);
+    border: 1px solid rgba(0,173,124,0.3);
+  }
+  .tpl-card.produce:hover { box-shadow: 0 8px 32px rgba(0,173,124,0.12); }
+  .tpl-card.calculate {
+    background: linear-gradient(145deg, #081840, #0E2250);
+    border: 1px solid rgba(0,75,141,0.3);
+  }
+  .tpl-card.calculate:hover { box-shadow: 0 8px 32px rgba(0,75,141,0.12); }
+  .tpl-card.consume {
+    background: linear-gradient(145deg, #2A1508, #351C0A);
+    border: 1px solid rgba(227,91,57,0.3);
+  }
+  .tpl-card.consume:hover { box-shadow: 0 8px 32px rgba(227,91,57,0.12); }
+  .tpl-card.command {
+    background: linear-gradient(145deg, #0E1328, #131A36);
+    border: 1px solid rgba(0,75,141,0.3);
+  }
+  .tpl-card.command:hover { box-shadow: 0 8px 32px rgba(0,75,141,0.12); }
+
+  .tpl-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .tpl-card.produce .tpl-label { color: var(--success-green); }
+  .tpl-card.calculate .tpl-label { color: var(--calc-blue-light); }
+  .tpl-card.consume .tpl-label { color: var(--lv-orange-light); }
+  .tpl-card.command .tpl-label { color: var(--cmd-purple-light); }
+
+  .tpl-title { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
+
+  .tpl-flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .fb { padding: 5px 10px; border-radius: var(--radius-xs); font-weight: 600; font-size: 11px; white-space: nowrap; }
+  .fb.hw { background: #3D4D56; color: #ECECED; }
+  .fb.plg { background: var(--lv-yellow); color: #1B2552; }
+  .fb.fl { background: var(--ni-green-dark); color: var(--ni-green-light); }
+  .fb.ui { background: var(--calc-blue); color: #D1ECFA; }
+  .fb.evt { background: var(--calc-blue); color: #D1ECFA; }
+  .fa { font-size: 15px; }
+  .fa.g { color: var(--success-green); }
+  .fa.b { color: var(--calc-blue-light); }
+  .fa.o { color: var(--consumer-orange); }
+  .fa.p { color: var(--cmd-purple-light); }
+
+  .tpl-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    line-height: 1.55;
+    font-style: italic;
+  }
+
+  .tpl-uses { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .use-tag { font-size: 11px; padding: 3px 10px; border-radius: 100px; font-weight: 500; }
+  .tpl-card.produce .use-tag { background: rgba(0,173,124,0.12); color: var(--success-green); }
+  .tpl-card.calculate .use-tag { background: rgba(0,75,141,0.12); color: var(--calc-blue-light); }
+  .tpl-card.consume .use-tag { background: rgba(227,91,57,0.12); color: var(--lv-orange-light); }
+  .tpl-card.command .use-tag { background: rgba(0,75,141,0.12); color: var(--cmd-purple-light); }
+
+  .tpl-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,0,0,0.4);
+    padding: 5px 10px;
+    border-radius: var(--radius-xs);
+    color: var(--text-secondary);
+    display: inline-block;
+  }
+
+  .tpl-note {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #E35B39;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .async-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: rgba(0,75,141,0.2);
+    color: var(--cmd-purple-light);
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  /* ── "Start Walkthrough" CTA on cards ── */
+  .tpl-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+  }
+  .tpl-card.produce .tpl-cta {
+    background: rgba(0,173,124,0.12);
+    color: var(--ni-green-light);
+    border-color: rgba(0,173,124,0.25);
+  }
+  .tpl-card.produce:hover .tpl-cta { background: rgba(0,173,124,0.22); }
+  .tpl-card.calculate .tpl-cta {
+    background: rgba(0,75,141,0.12);
+    color: var(--calc-blue-light);
+    border-color: rgba(0,75,141,0.25);
+  }
+  .tpl-card.calculate:hover .tpl-cta { background: rgba(0,75,141,0.22); }
+  .tpl-card.consume .tpl-cta {
+    background: rgba(227,91,57,0.12);
+    color: var(--lv-orange-light);
+    border-color: rgba(227,91,57,0.25);
+  }
+  .tpl-card.consume:hover .tpl-cta { background: rgba(227,91,57,0.22); }
+  .tpl-card.command .tpl-cta {
+    background: rgba(0,75,141,0.12);
+    color: var(--cmd-purple-light);
+    border-color: rgba(0,75,141,0.25);
+  }
+  .tpl-card.command:hover .tpl-cta { background: rgba(0,75,141,0.22); }
+  .tpl-cta svg { flex-shrink: 0; }
+
+  /* Decision Matrix Table */
+  .decision-table-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: auto;
+  }
+  .decision-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .decision-table thead th {
+    background: var(--bg-elevated);
+    padding: 14px 18px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+  .decision-table tbody td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .decision-table tbody tr:last-child td { border-bottom: none; }
+  .decision-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .decision-table tbody tr[data-walkthrough] {
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .decision-table tbody tr[data-walkthrough]:hover {
+    background: rgba(0,173,124,0.06);
+  }
+  .decision-table tbody tr[data-walkthrough]:hover .dt-template {
+    background: rgba(0,173,124,0.2);
+  }
+  .decision-table tbody tr[data-walkthrough]:hover .dt-launch-hint {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .dt-template {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,173,124,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    color: var(--ni-green-light);
+    white-space: nowrap;
+    transition: background var(--transition);
+  }
+  .dt-template-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dt-launch-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ni-green);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.25s ease;
+    white-space: nowrap;
+  }
+  .dt-launch-hint svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* ═══════════════════════════════════════════
+     PANEL 2: PLUG-IN LIFECYCLE
+     ═══════════════════════════════════════════ */
+  .lifecycle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .lc-node {
+    width: 100%;
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    position: relative;
+    z-index: 2;
+  }
+  .lc-node h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .lc-node p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .lc-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    letter-spacing: 0.3px;
+  }
+  .lc-vi {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.3);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .lc-node.init {
+    background: linear-gradient(135deg, #121A38, #0B1228);
+    border: 1px solid #253060;
+  }
+  .lc-node.init .lc-tag { background: #253060; color: #ECECED; }
+  .lc-node.config {
+    background: linear-gradient(135deg, #001F14, #003325);
+    border: 1px solid rgba(0,173,124,0.35);
+  }
+  .lc-node.config .lc-tag { background: rgba(0,173,124,0.2); color: var(--success-green); }
+  .lc-node.process {
+    background: linear-gradient(135deg, #0E1328, #131A36);
+    border: 2px solid #004B8D;
+    box-shadow: 0 0 28px rgba(0,75,141,0.2);
+  }
+  .lc-node.process .lc-tag { background: rgba(0,75,141,0.25); color: #1DB1DE; }
+  .lc-node.cleanup {
+    background: linear-gradient(135deg, #2A1508, #351C0A);
+    border: 1px solid rgba(227,91,57,0.35);
+  }
+  .lc-node.cleanup .lc-tag { background: rgba(227,91,57,0.2); color: var(--consumer-orange); }
+  .lc-node.final {
+    background: linear-gradient(135deg, #121A38, #0B1228);
+    border: 1px solid #253060;
+  }
+  .lc-node.final .lc-tag { background: #253060; color: #ECECED; }
+
+  .lc-arrow {
+    width: 2px;
+    height: 28px;
+    background: var(--text-muted);
+    position: relative;
+    z-index: 1;
+  }
+  .lc-arrow::after {
+    content: '▼';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .lc-loop {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    color: var(--lv-orange);
+    font-weight: 600;
+    font-family: var(--mono);
+    background: rgba(227,91,57,0.08);
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px dashed rgba(227,91,57,0.25);
+    margin: 4px 0;
+  }
+
+  .lc-spinner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,75,141,0.15);
+    padding: 5px 14px;
+    border-radius: var(--radius-xs);
+    color: #1DB1DE;
+    margin-top: 10px;
+  }
+  .lc-spinner .dot {
+    width: 10px; height: 10px;
+    border: 2px solid rgba(0,75,141,0.25);
+    border-top-color: #004B8D;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .lc-tip {
+    font-size: 11px;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .lc-tip.warn {
+    color: var(--lv-orange-light);
+    background: rgba(227,91,57,0.06);
+    border: 1px dashed rgba(227,91,57,0.2);
+  }
+  .lc-tip.info {
+    color: var(--calc-blue-light);
+    background: rgba(0,75,141,0.06);
+    border: 1px dashed rgba(0,75,141,0.2);
+  }
+  .lc-tip.danger {
+    color: #E35B39;
+    background: rgba(227,91,57,0.06);
+    border: 1px dashed rgba(227,91,57,0.2);
+  }
+
+  .timing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+    max-width: 380px;
+  }
+  .timing-card {
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  .timing-card.periodic {
+    background: rgba(0,75,141,0.08);
+    border: 1px solid rgba(0,75,141,0.2);
+  }
+  .timing-card.resample {
+    background: rgba(0,75,141,0.08);
+    border: 1px solid rgba(0,75,141,0.2);
+  }
+  .timing-card .t-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+  .timing-card .t-name { font-size: 12px; font-weight: 700; display: block; }
+  .timing-card.periodic .t-name { color: var(--calc-blue-light); }
+  .timing-card.resample .t-name { color: var(--cmd-purple-light); }
+  .timing-card .t-hint { font-size: 10px; color: var(--text-muted); display: block; margin-top: 2px; }
+
+  /* ═══════════════════════════════════════════
+     PANEL 3: CODE MAPPING
+     ═══════════════════════════════════════════ */
+  .mapping-grid {
+    display: grid;
+    grid-template-columns: 1fr 48px 1fr;
+    gap: 0;
+    max-width: 1050px;
+    margin: 0 auto;
+  }
+  .map-col { display: flex; flex-direction: column; gap: 14px; }
+  .map-header {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+  .map-header.lv { background: rgba(245,212,0,0.08); color: var(--lv-yellow); border: 1px solid rgba(245,212,0,0.15); }
+  .map-header.fl { background: rgba(0,173,124,0.08); color: var(--ni-green-light); border: 1px solid rgba(0,173,124,0.15); }
+
+  .map-block {
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .map-block.lv {
+    background: rgba(245,212,0,0.04);
+    border: 1px solid rgba(245,212,0,0.12);
+  }
+  .map-block.fl {
+    background: rgba(0,173,124,0.04);
+    border: 1px solid rgba(0,173,124,0.12);
+  }
+  .map-block h5 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .map-block.lv h5 { color: var(--lv-yellow); }
+  .map-block.fl h5 { color: var(--ni-green-light); }
+  .map-block .vi-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.3);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  .map-block p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .map-block .action-lbl {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.04);
+    padding: 4px 10px;
+    border-radius: var(--radius-xs);
+    margin-top: 8px;
+    display: inline-block;
+  }
+
+  .map-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    padding-top: 55px;
+  }
+  .map-dot {
+    display: flex;
+    align-items: center;
+  }
+  .map-line { width: 16px; height: 2px; border-top: 2px dashed var(--text-muted); }
+  .map-circle { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+
+  /* ═══════════════════════════════════════════
+     PANEL 4: STEP-BY-STEP DEVELOPMENT
+     ═══════════════════════════════════════════ */
+  .dev-timeline {
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+    padding-left: 56px;
+  }
+  .dev-rail {
+    position: absolute;
+    left: 32px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--ni-green), var(--calc-blue), var(--lv-yellow), var(--consumer-orange), var(--ni-green));
+    border-radius: 2px;
+  }
+  .dev-step {
+    position: relative;
+    padding: 18px 0 18px 36px;
+  }
+  .dev-dot {
+    position: absolute;
+    left: -36px;
+    top: 22px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 12px;
+    color: #fff;
+    z-index: 2;
+    box-shadow: 0 0 0 4px var(--bg-dark);
+  }
+  .dev-step:nth-child(1) .dev-dot { background: var(--ni-green); }
+  .dev-step:nth-child(2) .dev-dot { background: var(--calc-blue); }
+  .dev-step:nth-child(3) .dev-dot { background: var(--lv-yellow); color: #1A1D23; }
+  .dev-step:nth-child(4) .dev-dot { background: var(--consumer-orange); }
+  .dev-step:nth-child(5) .dev-dot { background: var(--ni-green); }
+
+  .dev-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 24px;
+    border: 1px solid var(--border-subtle);
+    transition: border-color var(--transition);
+  }
+  .dev-card:hover { border-color: var(--text-muted); }
+  .dev-card h4 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .dev-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .substeps { display: flex; flex-direction: column; gap: 8px; }
+  .substep {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .substep-num {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+  .substep-num.green { background: rgba(0,173,124,0.12); color: var(--ni-green-light); }
+  .substep-num.blue { background: rgba(0,75,141,0.12); color: var(--calc-blue-light); }
+  .substep-num.orange { background: rgba(227,91,57,0.12); color: var(--consumer-orange); }
+  .substep-num.purple { background: rgba(0,75,141,0.12); color: #1DB1DE; }
+
+  .alert-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-top: 10px;
+  }
+  .alert-badge.red { background: rgba(227,91,57,0.12); color: #E35B39; }
+  .alert-badge.orange { background: rgba(227,91,57,0.12); color: var(--lv-orange); }
+  .alert-badge.blue { background: rgba(0,75,141,0.08); color: var(--calc-blue-light); }
+
+  .output-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,75,141,0.12);
+    color: #1DB1DE;
+    padding: 4px 12px;
+    border-radius: var(--radius-xs);
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .file-tree {
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 14px;
+    border: 1px solid var(--border-subtle);
+    line-height: 1.8;
+  }
+  .ft-match { color: var(--ni-green-light); font-weight: 600; }
+  .ft-ext { color: var(--text-muted); }
+  .ft-ok { color: var(--success-green); font-weight: 700; }
+  .ft-bad { color: #E35B39; font-weight: 700; }
+
+  .tip-box {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .tip-box.info {
+    background: rgba(0,75,141,0.06);
+    border: 1px solid rgba(0,75,141,0.15);
+    color: var(--text-secondary);
+  }
+  .tip-box.info strong { color: var(--calc-blue-light); }
+  .tip-box.warn {
+    background: rgba(245,212,0,0.06);
+    border: 1px solid rgba(245,212,0,0.15);
+    color: var(--text-secondary);
+  }
+  .tip-box.warn strong { color: var(--lv-yellow); }
+
+  /* ═══════════════════════════════════════════
+     PANEL 5: VI TOOLBOX
+     ═══════════════════════════════════════════ */
+  .toolbox {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .tool {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: border-color var(--transition), transform var(--transition);
+  }
+  .tool:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+  .tool-ico {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .tool-ico.g { background: linear-gradient(135deg, rgba(0,173,124,0.15), rgba(0,173,124,0.04)); border: 1px solid rgba(0,173,124,0.25); }
+  .tool-ico.b { background: linear-gradient(135deg, rgba(0,75,141,0.15), rgba(0,75,141,0.04)); border: 1px solid rgba(0,75,141,0.25); }
+  .tool-ico.y { background: linear-gradient(135deg, rgba(245,212,0,0.15), rgba(245,212,0,0.04)); border: 1px solid rgba(245,212,0,0.25); }
+  .tool-ico.o { background: linear-gradient(135deg, rgba(227,91,57,0.15), rgba(227,91,57,0.04)); border: 1px solid rgba(227,91,57,0.25); }
+  .tool-ico.p { background: linear-gradient(135deg, rgba(0,75,141,0.15), rgba(0,75,141,0.04)); border: 1px solid rgba(0,75,141,0.25); }
+  .tool-ico.pk { background: linear-gradient(135deg, rgba(227,91,57,0.15), rgba(227,91,57,0.04)); border: 1px solid rgba(227,91,57,0.25); }
+  .tool-ico.tl { background: linear-gradient(135deg, rgba(0,173,124,0.15), rgba(0,173,124,0.04)); border: 1px solid rgba(0,173,124,0.25); }
+
+  .tool-body h5 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .tool-body .tool-vi {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 6px;
+  }
+  .tool-body p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .tool-used {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .tool-used span {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+  }
+  .tool-warn { margin-top: 6px; font-size: 10px; color: #E35B39; font-weight: 600; line-height: 1.4; }
+  .tool-tip { margin-top: 5px; font-size: 10px; color: var(--success-green); font-weight: 600; line-height: 1.4; }
+  .tool-hint { margin-top: 4px; font-size: 10px; color: var(--text-muted); font-style: italic; line-height: 1.4; }
+
+  /* ═══════════════════════════════════════════
+     PANEL 6: COMMON PITFALLS
+     ═══════════════════════════════════════════ */
+  .pitfalls { max-width: 860px; margin: 0 auto; }
+  .pitfall {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 14px;
+    transition: border-color var(--transition);
+  }
+  .pitfall:hover { border-color: var(--text-muted); }
+  .pitfall h5 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pitfall p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .pitfall .fix {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--success-green);
+    font-weight: 600;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     WALKTHROUGH OVERLAY — TEMPLATE-SPECIFIC GUIDED VIEW
+     ═══════════════════════════════════════════════════════ */
+  #walkthrough-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    background: var(--bg-dark);
+    overflow-y: auto;
+    animation: wtIn 0.3s ease;
+  }
+  #walkthrough-overlay.active { display: block; }
+  @keyframes wtIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── Walkthrough header ── */
+  .wt-header {
+    position: sticky;
+    top: 0;
+    z-index: 910;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 48px;
+  }
+  .wt-header-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0 12px;
+  }
+  .wt-back {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .wt-back:hover { border-color: var(--text-muted); color: var(--text-primary); background: rgba(255,255,255,0.03); }
+  .wt-back svg { width: 14px; height: 14px; }
+
+  .wt-header-info { flex: 1; min-width: 0; }
+  .wt-template-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+  .wt-header-info h2 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wt-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .wt-progress-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .wt-export-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,173,124,0.1);
+    border: 1px solid rgba(0,173,124,0.25);
+    color: var(--ni-green-light);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .wt-export-btn:hover { background: rgba(0,173,124,0.2); }
+  .wt-export-btn svg { width: 14px; height: 14px; }
+
+  /* ── Progress bar ── */
+  .wt-progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 10px 0 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wt-progress-bar::-webkit-scrollbar { display: none; }
+
+  .wt-pstep {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .wt-pstep-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    background: var(--border-subtle);
+    color: var(--text-muted);
+    transition: all var(--transition);
+    border: 2px solid transparent;
+    position: relative;
+  }
+  .wt-pstep-dot.active {
+    border-color: var(--ni-green);
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+  }
+  .wt-pstep-dot.completed {
+    background: var(--ni-green);
+    color: #fff;
+    border-color: var(--ni-green);
+  }
+  .wt-pstep-dot.completed::after {
+    content: '✓';
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .wt-pstep-dot.completed span { display: none; }
+
+  .wt-pstep-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: 6px;
+    margin-right: 4px;
+    white-space: nowrap;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color var(--transition);
+  }
+  .wt-pstep-dot.active + .wt-pstep-label { color: var(--text-primary); }
+  .wt-pstep-dot.completed + .wt-pstep-label { color: var(--ni-green-light); }
+
+  .wt-pstep-line {
+    width: 24px;
+    height: 2px;
+    background: var(--border-subtle);
+    flex-shrink: 0;
+    margin: 0 4px;
+    transition: background var(--transition);
+  }
+  .wt-pstep-line.filled { background: var(--ni-green); }
+
+  /* ── Walkthrough body ── */
+  .wt-body {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 36px 48px 100px;
+  }
+
+  .wt-step-section {
+    display: none;
+    animation: panelIn 0.3s ease;
+  }
+  .wt-step-section.active { display: block; }
+
+  .wt-step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  .wt-step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .wt-step-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .wt-step-vi {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: var(--radius-xs);
+    display: inline-block;
+    margin-bottom: 16px;
+    margin-left: 50px;
+  }
+  .wt-step-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 680px;
+  }
+
+  /* ── Checklist items ── */
+  .wt-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .wt-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+    user-select: none;
+  }
+  .wt-check-item:hover { border-color: var(--text-muted); }
+  .wt-check-item.checked {
+    border-color: rgba(0,173,124,0.3);
+    background: rgba(0,173,124,0.04);
+  }
+  .wt-check-item.checked .wt-check-text { color: var(--text-muted); }
+  .wt-check-item.checked .wt-check-text strong { color: var(--text-secondary); }
+
+  .wt-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border-subtle);
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all var(--transition);
+  }
+  .wt-check-item.checked .wt-checkbox {
+    background: var(--ni-green);
+    border-color: var(--ni-green);
+  }
+  .wt-checkbox svg { opacity: 0; transition: opacity var(--transition); }
+  .wt-check-item.checked .wt-checkbox svg { opacity: 1; }
+
+  .wt-check-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    flex: 1;
+  }
+  .wt-check-text strong { color: var(--text-primary); font-weight: 600; }
+  .wt-check-text code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--calc-blue-light);
+  }
+
+  /* ── Inline pitfall warnings ── */
+  .wt-pitfall {
+    margin: 0 0 16px;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    border-left: 3px solid;
+    animation: pitfallIn 0.4s ease;
+  }
+  @keyframes pitfallIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+
+  .wt-pitfall.critical {
+    background: rgba(227,91,57,0.06);
+    border-left-color: #E35B39;
+  }
+  .wt-pitfall.warning {
+    background: rgba(245,212,0,0.04);
+    border-left-color: var(--lv-yellow);
+  }
+  .wt-pitfall.info {
+    background: rgba(0,75,141,0.06);
+    border-left-color: var(--calc-blue-light);
+  }
+
+  .wt-pitfall-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .wt-pitfall-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .wt-pitfall-title {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .wt-pitfall.critical .wt-pitfall-title { color: #E35B39; }
+  .wt-pitfall.warning .wt-pitfall-title { color: var(--lv-yellow); }
+  .wt-pitfall.info .wt-pitfall-title { color: var(--calc-blue-light); }
+
+  .wt-pitfall-body {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .wt-pitfall-fix {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--ni-green-light);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* ── VI Reference cards inside walkthrough ── */
+  .wt-vi-ref {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+  }
+  .wt-vi-ref-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(0,173,124,0.12), rgba(0,173,124,0.03));
+    border: 1px solid rgba(0,173,124,0.2);
+  }
+  .wt-vi-ref-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .wt-vi-ref-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* ── Step navigation ── */
+  .wt-step-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .wt-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .wt-nav-btn:hover { border-color: var(--text-muted); color: var(--text-primary); background: rgba(255,255,255,0.03); }
+  .wt-nav-btn.primary {
+    background: var(--ni-green);
+    border-color: var(--ni-green);
+    color: #fff;
+  }
+  .wt-nav-btn.primary:hover { background: #00C48C; border-color: #00C48C; }
+  .wt-nav-btn:disabled { opacity: 0.3; pointer-events: none; }
+  .wt-nav-btn svg { width: 16px; height: 16px; }
+
+  /* ── Toast notification ── */
+  .wt-toast {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg-elevated);
+    border: 1px solid var(--ni-green);
+    color: var(--ni-green-light);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elevated);
+    z-index: 999;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+  }
+  .wt-toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    header, nav[role="tablist"], main { padding-left: 20px; padding-right: 20px; }
+    .template-grid { grid-template-columns: 1fr; }
+    .mapping-grid { grid-template-columns: 1fr; }
+    .map-center { display: none; }
+    .toolbox { grid-template-columns: 1fr; }
+    .decision-table { font-size: 12px; }
+    .decision-table thead th, .decision-table tbody td { padding: 10px 12px; }
+    .wt-header { padding: 0 20px; }
+    .wt-body { padding: 24px 20px 80px; }
+    .wt-header-info h2 { font-size: 16px; }
+    .wt-pstep-label { display: none; }
+    .wt-header-actions { gap: 6px; }
+    .wt-progress-text { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-badge">NI · FlexLogger · Plug-In Development Kit</div>
+  <h1>Plug-In Development Guide</h1>
+  <p class="subtitle">An interactive walkthrough for building FlexLogger plug-ins — from choosing the right template to deploying and testing your first plug-in. Designed for LabVIEW developers and test engineers new to FlexLogger.</p>
+</header>
+
+<!-- ── TAB NAVIGATION ── -->
+<nav role="tablist" aria-label="Guide sections">
+  <button role="tab" class="tab-btn" aria-selected="true" aria-controls="panel-template" id="tab-template" tabindex="0">
+    <span class="tab-step">1</span>Choose Your Template
+  </button>
+  <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-lifecycle" id="tab-lifecycle" tabindex="-1">
+    <span class="tab-step">2</span>Plug-In Lifecycle
+  </button>
+  <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-mapping" id="tab-mapping" tabindex="-1">
+    <span class="tab-step">3</span>LabVIEW ↔ Plug-In Mapping
+  </button>
+  <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-dev" id="tab-dev" tabindex="-1">
+    <span class="tab-step">4</span>Step-by-Step Build
+  </button>
+  <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-toolbox" id="tab-toolbox" tabindex="-1">
+    <span class="tab-step">5</span>VI Toolbox Reference
+  </button>
+  <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-pitfalls" id="tab-pitfalls" tabindex="-1">
+    <span class="tab-step">6</span>Pitfalls &amp; Best Practices
+  </button>
+</nav>
+
+<!-- ── MAIN CONTENT ── -->
+<main id="main-content">
+
+  <!-- ════════ PANEL 1: CHOOSE YOUR TEMPLATE ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-template" aria-labelledby="tab-template" aria-hidden="false">
+
+    <p class="panel-intro">Every FlexLogger plug-in starts with a <strong>template</strong>. The template determines how data flows between your plug-in, FlexLogger, and external hardware. Choose the one that matches what your plug-in needs to do — then click to start a guided walkthrough.</p>
+
+    <div class="template-question">
+      <h3>What does your plug-in need to do?</h3>
+      <p>Pick your template below to start a step-by-step walkthrough</p>
+    </div>
+
+    <div class="template-grid">
+      <!-- Produce Data -->
+      <div class="tpl-card produce" onclick="launchWalkthrough('produce')" tabindex="0" role="button" aria-label="Start Produce Data walkthrough">
+        <div class="tpl-label">Template A — Send Data In</div>
+        <div class="tpl-title">Produce Data for FlexLogger</div>
+        <div class="tpl-flow">
+          <span class="fb hw">Your Hardware</span>
+          <span class="fa g">→</span>
+          <span class="fb plg">Plug-In</span>
+          <span class="fa g">→</span>
+          <span class="fb fl">FlexLogger</span>
+        </div>
+        <div class="tpl-desc">Data flows one way: from an external device into FlexLogger. Use this when you need FlexLogger to acquire data from hardware it doesn't natively support.</div>
+        <div class="tpl-uses">
+          <span class="use-tag">DMM / multimeter</span>
+          <span class="use-tag">Modbus read</span>
+          <span class="use-tag">Serial device</span>
+          <span class="use-tag">Synthetic signals</span>
+        </div>
+        <div class="tpl-name">Template: Produce data for FlexLogger</div>
+        <div class="tpl-cta">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          Start Guided Walkthrough
+        </div>
+      </div>
+
+      <!-- Perform Calculation -->
+      <div class="tpl-card calculate" onclick="launchWalkthrough('calculate')" tabindex="0" role="button" aria-label="Start Perform Calculation walkthrough">
+        <div class="tpl-label">Template B — Process &amp; Transform</div>
+        <div class="tpl-title">Perform Calculation</div>
+        <div class="tpl-flow">
+          <span class="fb fl">FlexLogger</span>
+          <span class="fa b">→</span>
+          <span class="fb plg">Plug-In</span>
+          <span class="fa b">→</span>
+          <span class="fb fl">FlexLogger</span>
+        </div>
+        <div class="tpl-desc">Data flows both ways: read existing FlexLogger channels, compute a result, and publish a new channel back. Use this for custom math on live data.</div>
+        <div class="tpl-uses">
+          <span class="use-tag">Cycle counting</span>
+          <span class="use-tag">Rosette strain calc</span>
+          <span class="use-tag">FFT / spectral</span>
+          <span class="use-tag">Min / Max / RMS</span>
+        </div>
+        <div class="tpl-name">Template: Perform calculation</div>
+        <div class="tpl-cta">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          Start Guided Walkthrough
+        </div>
+      </div>
+
+      <!-- Consume Setpoint -->
+      <div class="tpl-card consume" onclick="launchWalkthrough('consume')" tabindex="0" role="button" aria-label="Start Consume Setpoint walkthrough">
+        <div class="tpl-label">Template C — Control Output</div>
+        <div class="tpl-title">Consume Setpoint Data</div>
+        <div class="tpl-flow">
+          <span class="fb ui">User Input</span>
+          <span class="fa o">→</span>
+          <span class="fb plg">Plug-In</span>
+          <span class="fa o">→</span>
+          <span class="fb hw">Your Hardware</span>
+        </div>
+        <div class="tpl-desc">Data flows outward: the user types a value in FlexLogger, and your plug-in sends it to an external output device. The user can update values during a live test.</div>
+        <div class="tpl-uses">
+          <span class="use-tag">DC power supply</span>
+          <span class="use-tag">Modbus write</span>
+          <span class="use-tag">Actuators / motors</span>
+        </div>
+        <div class="tpl-name">Template: Consume setpoint data</div>
+        <div class="tpl-cta">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          Start Guided Walkthrough
+        </div>
+      </div>
+
+      <!-- Command (Advanced) -->
+      <div class="tpl-card command" onclick="launchWalkthrough('command')" tabindex="0" role="button" aria-label="Start Command Button walkthrough">
+        <div class="tpl-label">Advanced — Event Trigger</div>
+        <div class="tpl-title">Command Button</div>
+        <div class="tpl-flow">
+          <span class="fb evt">UI Button</span>
+          <span class="fa p">⚡</span>
+          <span class="fb plg">Plug-In</span>
+        </div>
+        <div class="tpl-desc">Not a template — an add-on feature. Creates a button in FlexLogger that triggers an action in your plug-in (like zeroing a scale). Runs asynchronously.</div>
+        <div class="tpl-uses">
+          <span class="use-tag">Tare / Zero</span>
+          <span class="use-tag">Calibrate</span>
+          <span class="use-tag">Test Start/Stop</span>
+        </div>
+        <div class="async-tag">⚡ Runs in a separate loop</div>
+        <div class="tpl-note">⚠ Commands run in their own thread. Use a Data Value Reference (DVR) — not class private data directly — to share state with Process.vi.</div>
+        <div class="tpl-name">VI: Handle Notification.vi (Override)</div>
+        <div class="tpl-cta">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+          Start Guided Walkthrough
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision Matrix Table -->
+    <h3 class="section-title">When to Use Which Template</h3>
+    <p class="section-desc">Use this table to quickly match your scenario to the right starting point. Click any row to jump straight into its walkthrough. Many real-world plug-ins combine features from multiple templates.</p>
+
+    <div class="decision-table-wrap">
+      <table class="decision-table" aria-label="Template decision guide">
+        <thead>
+          <tr>
+            <th>Your Scenario</th>
+            <th>Template</th>
+            <th>Why This Template</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-walkthrough="produce" onclick="launchWalkthrough('produce')" title="Start Producer walkthrough">
+            <td>Read data from a third-party instrument not supported by FlexLogger</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Produce data</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>You need channels that send hardware data into FlexLogger for logging and display</td>
+            <td>Read voltage from a Keysight DMM via IVI driver</td>
+          </tr>
+          <tr data-walkthrough="produce" onclick="launchWalkthrough('produce')" title="Start Producer walkthrough">
+            <td>Generate synthetic or simulated signals for testing</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Produce data</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>No external hardware — you just need to create waveform data programmatically</td>
+            <td>Random noise generator, sine wave source</td>
+          </tr>
+          <tr data-walkthrough="calculate" onclick="launchWalkthrough('calculate')" title="Start Calculator walkthrough">
+            <td>Compute a derived measurement from existing FlexLogger channels</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Perform calculation</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>You read live data from other channels, apply math, and publish the result</td>
+            <td>Rosette strain calculation from 3 strain gauges</td>
+          </tr>
+          <tr data-walkthrough="calculate" onclick="launchWalkthrough('calculate')" title="Start Calculator walkthrough">
+            <td>Count events, cycles, or threshold crossings on a live signal</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Perform calculation</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>Input channel feeds a stateful counter; result publishes as a new channel</td>
+            <td>Cycle counter for fatigue testing</td>
+          </tr>
+          <tr data-walkthrough="consume" onclick="launchWalkthrough('consume')" title="Start Consumer walkthrough">
+            <td>Send user-entered values to an external output device during a test</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Consume setpoint</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>User types a setpoint in FlexLogger; plug-in sends it to hardware</td>
+            <td>Set DC voltage on an IVI power supply</td>
+          </tr>
+          <tr data-walkthrough="calculate" onclick="launchWalkthrough('calculate')" title="Start Calculator walkthrough">
+            <td>Read Modbus registers AND write Modbus registers from FlexLogger</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Perform calculation</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>Combine produce + consume code in one plug-in. Start from the calculation template and add setpoint channels.</td>
+            <td>Full Modbus read/write plug-in</td>
+          </tr>
+          <tr data-walkthrough="command" onclick="launchWalkthrough('command')" title="Start Command walkthrough">
+            <td>Add a Tare, Zero, or Calibrate button to a plug-in</td>
+            <td><div class="dt-template-wrap"><span class="dt-template">Any + Command</span><span class="dt-launch-hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>Go</span></div></td>
+            <td>Commands are an add-on. Override Handle Notification.vi on any template.</td>
+            <td>Tare button for a scale plug-in</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════ PANEL 2: PLUG-IN LIFECYCLE ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-lifecycle" aria-labelledby="tab-lifecycle" aria-hidden="true">
+
+    <p class="panel-intro">FlexLogger manages your plug-in through a <strong>state machine</strong> with five states. Each state maps to a specific VI in your LabVIEW project. Understanding when each state runs — and what you should do in it — is the key to building reliable plug-ins.</p>
+
+    <div class="lifecycle">
+
+      <div class="lc-node init">
+        <h4><span class="lc-tag">ONCE</span> Step 2.1 — Initialize</h4>
+        <p>Runs <strong>once</strong> when the plug-in is added to a FlexLogger project. This is where you declare your channels, parameters, and timing method. <em>No hardware interaction here.</em></p>
+        <div class="timing-grid">
+          <div class="timing-card periodic"><span class="t-icon">🕒</span><span class="t-name">Periodic / Immediate</span><span class="t-hint">For Producers & Consumers</span></div>
+          <div class="timing-card resample"><span class="t-icon">🌊</span><span class="t-name">Resampling</span><span class="t-hint">For Calculators</span></div>
+        </div>
+        <div class="lc-tip danger">⚠ Choose one: <strong>Set Plugin Timing</strong> or <strong>Set Plugin Resampling</strong> — not both. Calculators that read input waveforms should use resampling.</div>
+        <span class="lc-vi">Initialize.vi</span>
+      </div>
+
+      <div class="lc-arrow"></div>
+
+      <div class="lc-node config">
+        <h4><span class="lc-tag">REPEAT</span> Step 2.2 — Configure Session</h4>
+        <p>Runs every time the user changes a setting (while the test is stopped). Open hardware connections, read parameter values, and set stream timing (dt, T0) here. Store hardware references in your class private data.</p>
+        <span class="lc-vi">Configure Session.vi</span>
+      </div>
+
+      <div class="lc-arrow"></div>
+
+      <div class="lc-node process">
+        <h4><span class="lc-tag">LOOP</span> Step 2.3 — Process (Core Loop)</h4>
+        <p>The main loop. FlexLogger calls this VI repeatedly at the timing rate you configured. Read from hardware, perform calculations, and write data to FlexLogger here. <strong>No while-loop needed</strong> — FlexLogger handles the looping.</p>
+        <div class="lc-spinner"><span class="dot"></span> Running at configured interval (e.g., every 100 ms)</div>
+        <div class="lc-tip info">✔ Always check <code style="font-family:var(--mono);font-size:11px;">Get Valid Channels</code> before writing. Disabled channels still exist in the array but must not receive data.</div>
+        <span class="lc-vi">Process.vi</span>
+      </div>
+
+      <div class="lc-arrow"></div>
+      <div class="lc-loop">↻ User changes settings → Cleanup → Configure → Process resumes</div>
+      <div class="lc-arrow"></div>
+
+      <div class="lc-node cleanup">
+        <h4><span class="lc-tag">RESET</span> Step 2.4 — Cleanup Session</h4>
+        <p>Runs before each reconfiguration and when the test stops. Close hardware connections and release every resource that Configure Session opened. This is the mirror of Configure Session.</p>
+        <span class="lc-vi">Cleanup Session.vi</span>
+      </div>
+
+      <div class="lc-arrow"></div>
+
+      <div class="lc-node final">
+        <h4><span class="lc-tag">ONCE</span> Step 2.5 — Finalize</h4>
+        <p>Runs <strong>once</strong> when the plug-in is removed from the project or the project closes. Clean up anything created in Initialize. Usually empty.</p>
+        <span class="lc-vi">Finalize.vi</span>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════ PANEL 3: CODE MAPPING ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-mapping" aria-labelledby="tab-mapping" aria-hidden="true">
+
+    <p class="panel-intro">If you already know how to build a standalone LabVIEW VI that talks to hardware, you're halfway there. This side-by-side shows how each part of a standard VI maps to the FlexLogger plug-in structure. The key difference: <strong>FlexLogger manages the loop for you.</strong></p>
+
+    <div class="mapping-grid">
+      <div class="map-col">
+        <div class="map-header lv">Standard LabVIEW VI</div>
+        <div class="map-block lv"><h5>Step 3.1 — Front Panel Controls</h5><p>User-facing inputs: COM port, baud rate, device name, sample rate. User enters values before running.</p><span class="action-lbl">User enters config values</span></div>
+        <div class="map-block lv"><h5>Step 3.2 — Open / Init Session</h5><p>Opens the hardware connection using values from the front panel. Runs once before the main loop.</p><span class="action-lbl">One-time setup before loop</span></div>
+        <div class="map-block lv"><h5>Step 3.3 — While Loop Body</h5><p>Reads hardware, processes data, writes to chart. Repeats until user clicks Stop.</p><span class="action-lbl">Core logic repeats each iteration</span></div>
+        <div class="map-block lv"><h5>Step 3.4 — Close / Cleanup</h5><p>Closes hardware connection, deallocates resources, handles final errors. Runs once after loop exits.</p><span class="action-lbl">Runs once after loop exits</span></div>
+      </div>
+      <div class="map-center">
+        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
+        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
+        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
+        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
+      </div>
+      <div class="map-col">
+        <div class="map-header fl">FlexLogger Plug-In Structure</div>
+        <div class="map-block fl"><span class="vi-tag">Initialize.vi</span><h5>Step 3.1 — Declare Parameters &amp; Channels</h5><p>Use <code style="font-family:var(--mono);font-size:11px;">Write Parameter</code> and <code style="font-family:var(--mono);font-size:11px;">Create Channel</code> to define what appears in FlexLogger's UI. Set the timing method.</p></div>
+        <div class="map-block fl"><span class="vi-tag">Configure Session.vi</span><h5>Step 3.2 — Open Hardware Here</h5><p>Read parameter values from FlexLogger, open instrument sessions, set stream timing. Store references in <code style="font-family:var(--mono);font-size:11px;">MyPlugin.ctl</code>.</p></div>
+        <div class="map-block fl"><span class="vi-tag">Process.vi</span><h5>Step 3.3 — Core Logic (No Loop Needed)</h5><p>Write only the <em>body</em> of the loop — FlexLogger calls this VI repeatedly. Read hardware → Calculate → <code style="font-family:var(--mono);font-size:11px;">Write Data</code> to FlexLogger.</p></div>
+        <div class="map-block fl"><span class="vi-tag">Cleanup Session.vi</span><h5>Step 3.4 — Close Resources Here</h5><p>Close hardware sessions, release resources. Mirror everything opened in Configure Session. Clear private data references.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ PANEL 4: STEP-BY-STEP BUILD ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-dev" aria-labelledby="tab-dev" aria-hidden="true">
+
+    <p class="panel-intro">Follow these five steps to go from a fresh install to a working plug-in loaded in FlexLogger. Each step builds on the previous one.</p>
+
+    <div class="dev-timeline">
+      <div class="dev-rail"></div>
+
+      <div class="dev-step">
+        <div class="dev-dot">1</div>
+        <div class="dev-card">
+          <h4>Step 4.1 — Install the Tools</h4>
+          <div class="substeps">
+            <div class="substep"><div class="substep-num green">1a</div><span>Install <strong>LabVIEW</strong> (with Application Builder Module)</span></div>
+            <div class="substep"><div class="substep-num green">1b</div><span>Install <strong>FlexLogger</strong> (check version compatibility first)</span></div>
+            <div class="substep"><div class="substep-num green">1c</div><span>Install the <strong>FlexLogger Plug-In Development Kit</strong> via NI Package Manager</span></div>
+          </div>
+          <div class="alert-badge red">⚠ Install in this exact order — LabVIEW → FlexLogger → PDK</div>
+          <p style="margin-top:12px;">Verify your install: open LabVIEW → <code style="font-family:var(--mono);font-size:12px;">View → Functions Palette → FlexLogger</code>. If you see the FlexLogger palette, you're ready.</p>
+        </div>
+      </div>
+
+      <div class="dev-step">
+        <div class="dev-dot">2</div>
+        <div class="dev-card">
+          <h4>Step 4.2 — Create Your Plug-In Project</h4>
+          <div class="substeps">
+            <div class="substep"><div class="substep-num blue">2a</div><span>In LabVIEW: <code style="font-family:var(--mono);font-size:12px;">File → Create Project → FlexLogger IO Plug-in</code></span></div>
+            <div class="substep"><div class="substep-num blue">2b</div><span>Choose your template: <strong>Produce Data</strong>, <strong>Perform Calculation</strong>, or <strong>Consume Setpoint</strong> (see Tab 1 for guidance)</span></div>
+            <div class="substep"><div class="substep-num blue">2c</div><span>Name your plug-in and click <strong>Create</strong></span></div>
+          </div>
+          <p style="margin-top:12px;">The wizard creates: a <code style="font-family:var(--mono);font-size:12px;">.lvclass</code> (with all five VIs), an <code style="font-family:var(--mono);font-size:12px;">.xml</code> metadata file, and a Packed Library build specification.</p>
+          <div class="tip-box warn"><strong>💡 Tip from the R&amp;D team:</strong> If you plan to integrate real hardware, first build a standalone LabVIEW VI that communicates with your device. Get that working, then map the code into the plug-in VIs. The Mouse Input example demonstrates this pattern.</div>
+        </div>
+      </div>
+
+      <div class="dev-step">
+        <div class="dev-dot">3</div>
+        <div class="dev-card">
+          <h4>Step 4.3 — Customize Your VIs &amp; Build</h4>
+          <div class="substeps">
+            <div class="substep"><div class="substep-num blue">3a</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Initialize.vi</code>: define parameters, channels, timing</span></div>
+            <div class="substep"><div class="substep-num blue">3b</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Configure Session.vi</code>: read params, open hardware, set stream timing</span></div>
+            <div class="substep"><div class="substep-num blue">3c</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Process.vi</code>: implement your core logic (read → calculate → write)</span></div>
+            <div class="substep"><div class="substep-num blue">3d</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Cleanup Session.vi</code>: close hardware, release resources</span></div>
+            <div class="substep"><div class="substep-num blue">3e</div><span>Right-click the <strong>Packed Library</strong> build spec → <strong>Build</strong></span></div>
+          </div>
+          <div class="output-tag">Output: MyPlugin.lvlibp + MyPlugin.xml</div>
+          <p style="margin-top:10px;">Build output auto-deploys to: <code style="font-family:var(--mono);font-size:11px;">%public%\Documents\National Instruments\FlexLogger\Plugins\IOPlugins\</code></p>
+          <div class="tip-box info"><strong>📝 Versioning:</strong> After each rebuild, update the <code style="font-family:var(--mono);font-size:11px;">&lt;Version&gt;</code> tag in your XML file to track changes. FlexLogger uses this to detect updates.</div>
+        </div>
+      </div>
+
+      <div class="dev-step">
+        <div class="dev-dot">4</div>
+        <div class="dev-card">
+          <h4>Step 4.4 — Test with the Simulator</h4>
+          <div class="substeps">
+            <div class="substep"><div class="substep-num purple">4a</div><span>Open <code style="font-family:var(--mono);font-size:12px;">Plugin Environment Simulator.vi</code> (ships with the PDK)</span></div>
+            <div class="substep"><div class="substep-num purple">4b</div><span>Run it and select your <code style="font-family:var(--mono);font-size:12px;">.lvclass</code> file</span></div>
+            <div class="substep"><div class="substep-num purple">4c</div><span>Set breakpoints, add probes, configure parameters, verify output data</span></div>
+          </div>
+          <p style="margin-top:12px;">The simulator lets you debug from LabVIEW source code — something you can't do once the plug-in is compiled and running inside FlexLogger.</p>
+          <div class="alert-badge orange">⚠ The simulator does not support digital channels</div>
+        </div>
+      </div>
+
+      <div class="dev-step">
+        <div class="dev-dot">5</div>
+        <div class="dev-card">
+          <h4>Step 4.5 — Load in FlexLogger &amp; Validate</h4>
+          <div class="substeps">
+            <div class="substep"><div class="substep-num green">5a</div><span>Launch FlexLogger → open or create a project</span></div>
+            <div class="substep"><div class="substep-num green">5b</div><span><code style="font-family:var(--mono);font-size:12px;">Add channels → Plug-in → Select your plug-in</code></span></div>
+            <div class="substep"><div class="substep-num green">5c</div><span>Configure parameters → run test → verify live data on screen</span></div>
+          </div>
+          <p style="margin-top:16px; font-size:13px; font-weight:700; color:#E35B39;">⚠ Critical: File Naming Must Match</p>
+          <div class="file-tree">
+            📂 <span class="ft-match">MyPlugin</span><span class="ft-ext">/ (folder)</span><br>
+            &nbsp;&nbsp;├── <span class="ft-match">MyPlugin</span><span class="ft-ext">.lvlibp</span> <span class="ft-ok">✔</span><br>
+            &nbsp;&nbsp;└── <span class="ft-match">MyPlugin</span><span class="ft-ext">.xml</span> <span class="ft-ok">✔</span><br><br>
+            <span style="color:#E35B39;font-weight:600;">Error state:</span><br>
+            &nbsp;&nbsp;└── <span style="color:#E35B39;">DifferentName</span><span class="ft-ext">.xml</span> <span class="ft-bad">✘ Won't load</span>
+          </div>
+          <p style="margin-top:8px; font-size:11px; color:var(--text-muted);">The folder name, .lvlibp filename, and .xml filename must all match exactly — or FlexLogger will silently skip the plug-in.</p>
+          <div class="tip-box info"><strong>🔍 Troubleshooting:</strong> If your plug-in doesn't appear in FlexLogger, check for an <code style="font-family:var(--mono);font-size:11px;">Error.txt</code> file inside the plug-in folder. FlexLogger creates this when XML parsing fails.</div>
+          <div class="alert-badge red" style="margin-top:12px;">⚠ You must close &amp; reopen your FlexLogger project to pick up modified plug-ins</div>
+          <div class="alert-badge red" style="margin-top:6px;">⚠ FlexLogger does not support multiple plug-ins with the same name</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════ PANEL 5: VI TOOLBOX ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-toolbox" aria-labelledby="tab-toolbox" aria-hidden="true">
+
+    <p class="panel-intro">These are the VIs available in the FlexLogger palette in LabVIEW (<code style="font-family:var(--mono);font-size:12px;">View → Functions Palette → FlexLogger</code>). Each one has a specific purpose and belongs in a specific plug-in VI.</p>
+
+    <div class="toolbox">
+
+      <div class="tool">
+        <div class="tool-ico g">🏷️</div>
+        <div class="tool-body">
+          <h5>Create Channel</h5>
+          <span class="tool-vi">Create Channel.vi</span>
+          <p>Defines a new data channel. Set its unique ID, display name, unit, direction (Produced by Plugin or Setpoint consumed by Plugin), and data type.</p>
+          <div class="tool-warn">🛑 Never call Add Channels more than once from the same VI — it causes settings to not save. Call once with an array.</div>
+          <div class="tool-tip">💡 Use "Produced by Plugin (Resampler timing)" when using Min/Max resampling — auto-adapts to input rate changes.</div>
+          <div class="tool-hint">Channel IDs display best at ≤5 characters (e.g., "ai0", "Temp").</div>
+          <div class="tool-used"><span>Initialize.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico p">✏️</div>
+        <div class="tool-body">
+          <h5>Write Data</h5>
+          <span class="tool-vi">Write Data.vi</span>
+          <p>Sends waveform or string data from your plug-in to FlexLogger channels. Supports 1D/2D DBL arrays, waveforms, booleans, and strings.</p>
+          <div class="tool-used"><span>Process.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico b">👓</div>
+        <div class="tool-body">
+          <h5>Read 1D Waveform</h5>
+          <span class="tool-vi">Read 1D Wfm.vi</span>
+          <p>Gets input waveform data from FlexLogger channels mapped to the plug-in. Returns an array of waveforms (one per mapped channel).</p>
+          <div class="tool-used"><span>Process.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico y">📝</div>
+        <div class="tool-body">
+          <h5>Write Parameter (Plug-In Level)</h5>
+          <span class="tool-vi">Plugin:Write Parameter.vi</span>
+          <p>Creates a user-configurable plug-in parameter (string, DBL, boolean, enum, integer, or Command). Appears in the plug-in Configure dialog.</p>
+          <div class="tool-used"><span>Initialize.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico o">📋</div>
+        <div class="tool-body">
+          <h5>Read Parameter (Plug-In Level)</h5>
+          <span class="tool-vi">Plugin:Read Parameter.vi</span>
+          <p>Reads the current value of a plug-in parameter set by the user in FlexLogger. Use after configuration changes.</p>
+          <div class="tool-used"><span>Configure Session.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico pk">⏱️</div>
+        <div class="tool-body">
+          <h5>Set Stream Timing</h5>
+          <span class="tool-vi">Set Stream Timing.vi</span>
+          <p>Defines the waveform dt (sample interval) and T0 (start time) for data produced by the plug-in. Prevents timestamp overlap errors.</p>
+          <div class="tool-used"><span>Configure Session.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico tl">📥</div>
+        <div class="tool-body">
+          <h5>Read Latest Setpoints</h5>
+          <span class="tool-vi">Read Setpoints.vi</span>
+          <p>Returns the most recent scalar value for each setpoint channel. Used by consumer plug-ins to get user-entered control values.</p>
+          <div class="tool-warn">⚠ Supports DBL or Boolean only. FlexLogger cannot send string data to a plug-in.</div>
+          <div class="tool-used"><span>Process.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico p">🔧</div>
+        <div class="tool-body">
+          <h5>Write Data Type</h5>
+          <span class="tool-vi">Write Data Type.vi</span>
+          <p>Sets a channel's data type: Wfm (DBL) for analog, Wfm (Digital) for digital, or String. Connect to Create Channel VI.</p>
+          <div class="tool-used"><span>Initialize.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool" style="border-color:rgba(0,75,141,0.2);">
+        <div class="tool-ico p">🔄</div>
+        <div class="tool-body">
+          <h5 style="color:var(--cmd-purple-light);">Dynamic Channel Management</h5>
+          <span class="tool-vi">Replace Producer Channels.vi / Get Valid Channels.vi</span>
+          <p>Replaces all existing producer channels with a new set. Use when the user changes a "Number of Channels" parameter and you need a completely different channel list.</p>
+          <div class="tool-hint">Also: Replace Channel Group.vi (partial updates), Get Channel With Name.vi (check existence).</div>
+          <div class="tool-used"><span>Configure Session.vi</span><span style="background:rgba(0,75,141,0.1);color:var(--cmd-purple-light);">Advanced</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════ PANEL 6: PITFALLS & BEST PRACTICES ════════ -->
+  <section role="tabpanel" class="tab-panel" id="panel-pitfalls" aria-labelledby="tab-pitfalls" aria-hidden="true">
+
+    <p class="panel-intro">These are the most common mistakes and gotchas encountered by plug-in developers — sourced from the NI R&amp;D team and the official documentation. Save yourself debugging time by reviewing these before you start.</p>
+
+    <div class="pitfalls">
+
+      <div class="pitfall">
+        <h5>🔴 Error handling defaults can cause infinite retry loops</h5>
+        <p>By default, when a plug-in encounters an error, FlexLogger's base class runs Cleanup → Configure again. If the error persists (e.g., hardware disconnected), this creates an infinite loop of failed reconfiguration attempts.</p>
+        <p class="fix">✅ Fix: Override <code style="font-family:var(--mono);font-size:12px;">Handle Processing Error.vi</code> and set it to "Cleanup and Finalize" for hardware plug-ins. This stops the retry loop and waits for the user to manually change a setting. Use "Reporting Continues" for non-critical errors you just want to log.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🔴 Calling Add Channels multiple times in the same VI</h5>
+        <p>If you call Add Channels more than once from Initialize.vi (or any single VI), parameter settings won't save correctly. The second call overwrites the first.</p>
+        <p class="fix">✅ Fix: Build an array of all your channels first, then call Add Channels once with the complete array.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🔴 File naming mismatch prevents plug-in from loading</h5>
+        <p>FlexLogger silently skips plug-ins where the folder name, .lvlibp filename, and .xml filename don't match exactly. No error message appears — the plug-in just doesn't show up.</p>
+        <p class="fix">✅ Fix: After building, verify all three names match. Check for an Error.txt file in the plug-in folder if the plug-in doesn't appear.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🟡 Using both Set Plugin Timing and Set Plugin Resampling</h5>
+        <p>These are mutually exclusive for most use cases. Using both can cause unpredictable Process.vi execution timing.</p>
+        <p class="fix">✅ Fix: Producers → use Set Plugin Timing (Periodic). Calculators → use Set Plugin Resampling. Only combine them in rare cases where timing is independent of input data.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🟡 Calculators using "Periodic" timing instead of "On Data Ready"</h5>
+        <p>A calculation plug-in that uses Periodic timing may run before new input data is available, wasting cycles. The R&amp;D team recommends "On Data Ready" for calculation plug-ins.</p>
+        <p class="fix">✅ Fix: In Initialize.vi, set timing to On Data Ready with a timeout of -1 (wait forever for data) or a positive value if you want a heartbeat.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🟡 Writing data to disabled channels</h5>
+        <p>Users can disable individual channels in FlexLogger. If your Process.vi writes data to a disabled channel, it can cause errors or unexpected behavior.</p>
+        <p class="fix">✅ Fix: Call Get Valid Channels (or Get Valid Producer Channels) at the start of Process.vi and only write to channels in that list.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🟡 Timestamp overlaps when writing waveforms</h5>
+        <p>Writing waveforms that overlap in time disrupts both visualization and logging. This typically happens when dt or T0 is configured incorrectly.</p>
+        <p class="fix">✅ Fix: Use Set Stream Timing.vi in Configure Session.vi to properly set dt and start time. The Produce Data template shows the correct pattern.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🟡 Sharing data between Handle Notification and Process.vi</h5>
+        <p>Handle Notification.vi runs in a separate thread. Directly modifying class private data from it causes race conditions with Process.vi.</p>
+        <p class="fix">✅ Fix: Use a Data Value Reference (DVR) to safely share state between the notification handler and Process.vi.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🔵 Resampling mode affects output channel rate</h5>
+        <p>When using Maximum resampling mode, all input channels are upsampled to match the fastest channel. Your output channel will run at this faster rate — even if one of the inputs was originally slower.</p>
+        <p class="fix">✅ Tip: This doesn't affect the original channel's logged data, only your calculation output. Use "Produced by Plugin (Resampler timing)" for output channels so they auto-adapt.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🔵 Plug-in changes require FlexLogger restart</h5>
+        <p>After rebuilding a plug-in, FlexLogger doesn't automatically detect the update. You must close and reopen the project (or restart FlexLogger) to load the new version.</p>
+        <p class="fix">✅ Tip: During development, keep FlexLogger closed while rebuilding. The NI team is aware of this limitation and working on a refresh mechanism.</p>
+      </div>
+
+      <div class="pitfall">
+        <h5>🔵 PDK plug-ins vs. Measurement Plug-ins — know the difference</h5>
+        <p>FlexLogger supports two extension systems: PDK plug-ins (this guide) and Measurement Plug-ins. Measurement plug-ins are simpler but have no state machine — they're a single reentrant VI with no Initialize/Cleanup lifecycle. That makes them poor for hardware integration.</p>
+        <p class="fix">✅ Tip: Use PDK plug-ins when you need hardware control, stateful initialization, or complex lifecycle management. Use Measurement Plug-ins for simple, stateless calculations on existing channels.</p>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+
+<!-- ═══════════════════════════════════════════════
+     WALKTHROUGH OVERLAY
+     ═══════════════════════════════════════════════ -->
+<div id="walkthrough-overlay">
+  <div class="wt-header">
+    <div class="wt-header-top">
+      <button class="wt-back" onclick="closeWalkthrough()" aria-label="Return to template selection">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg>
+        Back
+      </button>
+      <div class="wt-header-info">
+        <div class="wt-template-badge" id="wt-badge"></div>
+        <h2 id="wt-title"></h2>
+      </div>
+      <div class="wt-header-actions">
+        <span class="wt-progress-text" id="wt-progress-text"></span>
+        <button class="wt-export-btn" onclick="exportChecklist()" aria-label="Copy checklist to clipboard">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M3 11V3a1 1 0 011-1h8"/></svg>
+          Copy Checklist
+        </button>
+      </div>
+    </div>
+    <div class="wt-progress-bar" id="wt-progress-bar"></div>
+  </div>
+  <div class="wt-body" id="wt-body"></div>
+</div>
+
+<!-- Toast -->
+<div class="wt-toast" id="wt-toast">Checklist copied to clipboard</div>
+
+
+<script>
+// ═══════════════════════════════════════════════
+// TAB NAVIGATION (original)
+// ═══════════════════════════════════════════════
+(function() {
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+
+  function activateTab(tab) {
+    tabs.forEach(t => { t.setAttribute('aria-selected', 'false'); t.setAttribute('tabindex', '-1'); });
+    panels.forEach(p => { p.setAttribute('aria-hidden', 'true'); });
+    tab.setAttribute('aria-selected', 'true');
+    tab.setAttribute('tabindex', '0');
+    tab.focus();
+    const panelId = tab.getAttribute('aria-controls');
+    const panel = document.getElementById(panelId);
+    if (panel) panel.setAttribute('aria-hidden', 'false');
+  }
+
+  tabs.forEach(tab => { tab.addEventListener('click', () => activateTab(tab)); });
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener('keydown', (e) => {
+      let target;
+      switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': e.preventDefault(); target = tabs[(idx + 1) % tabs.length]; break;
+        case 'ArrowLeft': case 'ArrowUp': e.preventDefault(); target = tabs[(idx - 1 + tabs.length) % tabs.length]; break;
+        case 'Home': e.preventDefault(); target = tabs[0]; break;
+        case 'End': e.preventDefault(); target = tabs[tabs.length - 1]; break;
+      }
+      if (target) activateTab(target);
+    });
+  });
+})();
+
+
+// ═══════════════════════════════════════════════
+// WALKTHROUGH ENGINE
+// ═══════════════════════════════════════════════
+const WALKTHROUGH_DATA = {
+
+  produce: {
+    title: 'Produce Data for FlexLogger',
+    badge: 'Producer',
+    badgeStyle: 'background:rgba(0,173,124,0.15);color:#7CCF8B;border:1px solid rgba(0,173,124,0.3);',
+    accentColor: '#00AD7C',
+    steps: [
+      {
+        title: 'Install & Create Project',
+        vi: null,
+        desc: 'Get your development environment set up and create a new Producer plug-in project from the FlexLogger wizard.',
+        checks: [
+          { text: 'Install <strong>LabVIEW</strong> with Application Builder Module' },
+          { text: 'Install <strong>FlexLogger</strong> (verify version compatibility with the PDK)' },
+          { text: 'Install the <strong>FlexLogger Plug-In Development Kit</strong> via NI Package Manager' },
+          { text: 'Verify install: <code>View → Functions Palette → FlexLogger</code> palette appears' },
+          { text: 'Create project: <code>File → Create Project → FlexLogger IO Plug-in</code> → select <strong>"Produce data for FlexLogger"</strong>' },
+          { text: 'Name your plug-in and click <strong>Create</strong>' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Install order matters', body: 'Always install LabVIEW → FlexLogger → PDK in that exact sequence. The PDK requires both to be present.', fix: null },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Initialize.vi — Declare Channels & Timing',
+        vi: 'Initialize.vi',
+        desc: 'This VI runs once when the plug-in is added. Declare your producer channels, set plug-in parameters, and choose your timing method.',
+        checks: [
+          { text: 'Call <code>Write Parameter.vi</code> to create user-configurable parameters (e.g., COM port, sample rate, device address)' },
+          { text: 'Call <code>Create Channel.vi</code> for each output channel — set ID, name, unit, direction = <strong>"Produced by Plugin"</strong>' },
+          { text: 'Call <code>Write Data Type.vi</code> to set channel data type (Wfm DBL for analog, Wfm Digital for digital)' },
+          { text: 'Build a single array of all channels, then call <code>Add Channels</code> <strong>exactly once</strong>' },
+          { text: 'Call <code>Set Plugin Timing</code> → choose <strong>Periodic</strong> and set your desired interval (e.g., 100 ms)' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Never call Add Channels more than once', body: 'Calling Add Channels multiple times in the same VI causes parameter settings to silently fail to save. The second call overwrites the first.', fix: 'Build a complete array of all channels first, then call Add Channels once.' },
+          { type: 'warning', icon: '🟡', title: 'Don\'t mix Set Plugin Timing and Set Plugin Resampling', body: 'These are mutually exclusive for producers. Using both causes unpredictable Process.vi execution timing.', fix: 'Producers should always use Set Plugin Timing (Periodic).' },
+        ],
+        viRefs: [
+          { icon: '📝', name: 'Plugin:Write Parameter.vi', desc: 'Creates a user-configurable parameter in the FlexLogger config dialog' },
+          { icon: '🏷️', name: 'Create Channel.vi', desc: 'Defines a new data channel with ID, name, unit, and direction' },
+          { icon: '🔧', name: 'Write Data Type.vi', desc: 'Sets the channel data type (Wfm DBL, Wfm Digital, or String)' },
+        ]
+      },
+      {
+        title: 'Configure Session.vi — Open Hardware',
+        vi: 'Configure Session.vi',
+        desc: 'Runs every time the user changes a setting. Read parameter values, open your hardware connection, and set stream timing here.',
+        checks: [
+          { text: 'Call <code>Read Parameter.vi</code> to get current user settings (COM port, baud rate, etc.)' },
+          { text: 'Open your instrument/hardware session using the parameter values' },
+          { text: 'Store the hardware reference in your class private data (<code>MyPlugin.ctl</code>)' },
+          { text: 'Call <code>Set Stream Timing.vi</code> to set dt (sample interval) and T0 (start time)' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Error handling defaults cause infinite retry loops', body: 'If hardware fails to open, FlexLogger runs Cleanup → Configure in an infinite loop by default.', fix: 'Override Handle Processing Error.vi and set to "Cleanup and Finalize" for hardware plug-ins.' },
+          { type: 'warning', icon: '🟡', title: 'Timestamp overlaps when writing waveforms', body: 'Incorrect dt or T0 configuration causes waveform timestamp overlaps that break visualization and logging.', fix: 'Use Set Stream Timing.vi here to properly configure dt and start time.' },
+        ],
+        viRefs: [
+          { icon: '📋', name: 'Plugin:Read Parameter.vi', desc: 'Reads the current value of a parameter set by the user' },
+          { icon: '⏱️', name: 'Set Stream Timing.vi', desc: 'Sets waveform dt and T0 to prevent timestamp overlaps' },
+        ]
+      },
+      {
+        title: 'Process.vi — Read Hardware & Write Data',
+        vi: 'Process.vi',
+        desc: 'The core loop. FlexLogger calls this repeatedly at your configured rate. Read from hardware and write the data to FlexLogger. No while-loop needed.',
+        checks: [
+          { text: 'Call <code>Get Valid Channels</code> to get the list of currently enabled channels' },
+          { text: 'Read data from your hardware using the stored reference from Configure Session' },
+          { text: 'Format the data as waveform(s) with correct dt and T0' },
+          { text: 'Call <code>Write Data.vi</code> to send data to FlexLogger — only write to valid channels' },
+          { text: 'Handle errors gracefully — do <strong>not</strong> pop up dialog boxes from Process.vi' },
+        ],
+        pitfalls: [
+          { type: 'warning', icon: '🟡', title: 'Writing data to disabled channels', body: 'Users can disable individual channels in FlexLogger. Writing to a disabled channel causes errors.', fix: 'Always call Get Valid Channels at the start of Process.vi and only write to channels in that list.' },
+        ],
+        viRefs: [
+          { icon: '✏️', name: 'Write Data.vi', desc: 'Sends waveform or string data to FlexLogger channels' },
+          { icon: '🔄', name: 'Get Valid Channels.vi', desc: 'Returns only the currently enabled channels' },
+        ]
+      },
+      {
+        title: 'Cleanup & Build',
+        vi: 'Cleanup Session.vi',
+        desc: 'Close hardware, build the packed library, and deploy to FlexLogger. This step mirrors Configure Session — release everything it opened.',
+        checks: [
+          { text: 'In <code>Cleanup Session.vi</code>: close the hardware session opened in Configure Session' },
+          { text: 'Clear all references stored in class private data' },
+          { text: 'Right-click the <strong>Packed Library</strong> build spec → <strong>Build</strong>' },
+          { text: 'Verify output: <code>MyPlugin.lvlibp</code> + <code>MyPlugin.xml</code> in the build output folder' },
+          { text: 'Confirm the folder name, .lvlibp, and .xml filenames <strong>all match exactly</strong>' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'File naming mismatch prevents loading', body: 'FlexLogger silently skips plug-ins where the folder, .lvlibp, and .xml names don\'t match. No error is shown.', fix: 'After building, verify all three names match. Check for Error.txt in the plug-in folder.' },
+          { type: 'info', icon: '🔵', title: 'Plug-in changes require FlexLogger restart', body: 'After rebuilding, you must close and reopen the FlexLogger project to load the new version.', fix: 'Keep FlexLogger closed while rebuilding during development.' },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Test & Validate',
+        vi: null,
+        desc: 'Test first in the PDK simulator, then deploy to FlexLogger and verify live data appears correctly.',
+        checks: [
+          { text: 'Open <code>Plugin Environment Simulator.vi</code> and select your <code>.lvclass</code> file' },
+          { text: 'Set breakpoints and probes — verify output data looks correct in the simulator' },
+          { text: 'Launch FlexLogger → open or create a project' },
+          { text: '<code>Add channels → Plug-in → Select your plug-in</code>' },
+          { text: 'Configure parameters, start a test, and verify live data on screen' },
+          { text: 'Check that data logs correctly to TDMS files' },
+        ],
+        pitfalls: [
+          { type: 'info', icon: '🔵', title: 'Simulator does not support digital channels', body: 'If your plug-in uses digital (boolean) channels, you\'ll need to test those directly in FlexLogger.', fix: null },
+        ],
+        viRefs: []
+      },
+    ]
+  },
+
+  calculate: {
+    title: 'Perform Calculation',
+    badge: 'Calculator',
+    badgeStyle: 'background:rgba(0,75,141,0.15);color:#1DB1DE;border:1px solid rgba(0,75,141,0.3);',
+    accentColor: '#1DB1DE',
+    steps: [
+      {
+        title: 'Install & Create Project',
+        vi: null,
+        desc: 'Set up your environment and create a Calculation plug-in project.',
+        checks: [
+          { text: 'Install <strong>LabVIEW</strong> with Application Builder Module' },
+          { text: 'Install <strong>FlexLogger</strong> and the <strong>Plug-In Development Kit</strong> via NI Package Manager' },
+          { text: 'Verify: <code>View → Functions Palette → FlexLogger</code> palette appears' },
+          { text: 'Create project: <code>File → Create Project → FlexLogger IO Plug-in</code> → select <strong>"Perform calculation"</strong>' },
+          { text: 'Name your plug-in and click <strong>Create</strong>' },
+        ],
+        pitfalls: [],
+        viRefs: []
+      },
+      {
+        title: 'Initialize.vi — Define Input/Output Channels & Resampling',
+        vi: 'Initialize.vi',
+        desc: 'Declare your input mapping, output channels, and use resampling-based timing so Process.vi fires when new data arrives.',
+        checks: [
+          { text: 'Call <code>Write Parameter.vi</code> to create any config parameters (e.g., calculation mode, thresholds)' },
+          { text: 'Create <strong>output</strong> channel(s) with direction = <strong>"Produced by Plugin (Resampler timing)"</strong>' },
+          { text: 'Build array of all channels → call <code>Add Channels</code> <strong>once</strong>' },
+          { text: 'Call <code>Set Plugin Resampling</code> → choose resampling mode (Minimum, Maximum, or Decimation)' },
+          { text: 'Set timing to <strong>On Data Ready</strong> with timeout = <strong>-1</strong> (wait forever for input data)' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Never call Add Channels more than once', body: 'Multiple calls cause parameter settings to silently fail to save.', fix: 'Build a complete array of all channels, then call Add Channels once.' },
+          { type: 'warning', icon: '🟡', title: 'Don\'t use Periodic timing for calculators', body: 'Periodic timing may fire Process.vi before new input data is available, wasting cycles.', fix: 'Use "On Data Ready" with a timeout of -1 or a positive heartbeat value.' },
+        ],
+        viRefs: [
+          { icon: '🏷️', name: 'Create Channel.vi', desc: 'Use "Produced by Plugin (Resampler timing)" for output channels' },
+        ]
+      },
+      {
+        title: 'Configure Session.vi — Read Parameters',
+        vi: 'Configure Session.vi',
+        desc: 'Runs when the user changes settings. Read parameter values and prepare any state needed for calculations. No hardware to open here for most calculators.',
+        checks: [
+          { text: 'Call <code>Read Parameter.vi</code> to get current user settings' },
+          { text: 'Store calculation configuration in class private data' },
+          { text: 'Initialize any stateful accumulators or counters (e.g., cycle count, running average)' },
+        ],
+        pitfalls: [],
+        viRefs: [
+          { icon: '📋', name: 'Plugin:Read Parameter.vi', desc: 'Reads the current value of a user-configured parameter' },
+        ]
+      },
+      {
+        title: 'Process.vi — Read Input, Calculate, Write Output',
+        vi: 'Process.vi',
+        desc: 'The core loop. Read input waveforms from mapped FlexLogger channels, run your calculation, and write the result back.',
+        checks: [
+          { text: 'Call <code>Get Valid Channels</code> to check which channels are enabled' },
+          { text: 'Call <code>Read 1D Waveform.vi</code> to get input data from mapped channels' },
+          { text: 'Perform your calculation (FFT, strain, RMS, cycle count, etc.)' },
+          { text: 'Format the result as a waveform with matching dt' },
+          { text: 'Call <code>Write Data.vi</code> to send the computed result to your output channel(s)' },
+        ],
+        pitfalls: [
+          { type: 'warning', icon: '🟡', title: 'Writing data to disabled channels causes errors', body: 'Users can disable individual channels. Your Process.vi must check before writing.', fix: 'Call Get Valid Channels at the start and only write to enabled channels.' },
+          { type: 'info', icon: '🔵', title: 'Resampling mode affects output rate', body: 'With Maximum resampling, all inputs upsample to the fastest channel rate. Your output runs at this rate too.', fix: 'Use "Produced by Plugin (Resampler timing)" for output channels to auto-adapt.' },
+        ],
+        viRefs: [
+          { icon: '👓', name: 'Read 1D Wfm.vi', desc: 'Gets input waveform data from mapped FlexLogger channels' },
+          { icon: '✏️', name: 'Write Data.vi', desc: 'Sends your calculated result to output channels' },
+        ]
+      },
+      {
+        title: 'Cleanup & Build',
+        vi: 'Cleanup Session.vi',
+        desc: 'Release resources, build the packed library, and verify file naming.',
+        checks: [
+          { text: 'In <code>Cleanup Session.vi</code>: clear any stateful data or accumulators' },
+          { text: 'Right-click <strong>Packed Library</strong> build spec → <strong>Build</strong>' },
+          { text: 'Verify folder name, .lvlibp, and .xml filenames <strong>all match exactly</strong>' },
+          { text: 'Update the <code>&lt;Version&gt;</code> tag in your XML file' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'File naming mismatch = silent failure', body: 'FlexLogger won\'t load plug-ins where the three names don\'t match. No error is shown.', fix: 'Verify all three names match after every build.' },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Test & Validate',
+        vi: null,
+        desc: 'Verify your calculation produces correct results in the simulator, then test with live data in FlexLogger.',
+        checks: [
+          { text: 'Test in <code>Plugin Environment Simulator.vi</code> with known input values' },
+          { text: 'Verify output matches expected calculation results' },
+          { text: 'Deploy to FlexLogger → map input channels → run a test' },
+          { text: 'Compare plug-in output against a manual calculation on the same data' },
+          { text: 'Verify data logs correctly to TDMS' },
+        ],
+        pitfalls: [],
+        viRefs: []
+      },
+    ]
+  },
+
+  consume: {
+    title: 'Consume Setpoint Data',
+    badge: 'Consumer',
+    badgeStyle: 'background:rgba(227,91,57,0.15);color:#F0826A;border:1px solid rgba(227,91,57,0.3);',
+    accentColor: '#E35B39',
+    steps: [
+      {
+        title: 'Install & Create Project',
+        vi: null,
+        desc: 'Set up your environment and create a Consumer (setpoint) plug-in project.',
+        checks: [
+          { text: 'Install <strong>LabVIEW</strong>, <strong>FlexLogger</strong>, and the <strong>PDK</strong> (in that order)' },
+          { text: 'Verify: <code>View → Functions Palette → FlexLogger</code> palette appears' },
+          { text: 'Create project: <code>File → Create Project → FlexLogger IO Plug-in</code> → select <strong>"Consume setpoint data"</strong>' },
+          { text: 'Name your plug-in and click <strong>Create</strong>' },
+        ],
+        pitfalls: [],
+        viRefs: []
+      },
+      {
+        title: 'Initialize.vi — Declare Setpoint Channels',
+        vi: 'Initialize.vi',
+        desc: 'Define your setpoint channels that will receive values from the FlexLogger UI, plus any configuration parameters.',
+        checks: [
+          { text: 'Call <code>Write Parameter.vi</code> for hardware config (e.g., VISA resource, output range)' },
+          { text: 'Call <code>Create Channel.vi</code> with direction = <strong>"Setpoint consumed by Plugin"</strong>' },
+          { text: 'Build array of all channels → call <code>Add Channels</code> <strong>once</strong>' },
+          { text: 'Call <code>Set Plugin Timing</code> → choose <strong>Periodic</strong> or <strong>Immediate</strong>' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Never call Add Channels more than once', body: 'Multiple calls cause parameter settings to silently fail to save.', fix: 'Build a complete array first, then call Add Channels once.' },
+          { type: 'info', icon: '🔵', title: 'Setpoints only support DBL or Boolean', body: 'FlexLogger cannot send string data to a plug-in via setpoint channels.', fix: 'Use DBL for numeric values and Boolean for on/off controls.' },
+        ],
+        viRefs: [
+          { icon: '🏷️', name: 'Create Channel.vi', desc: 'Set direction to "Setpoint consumed by Plugin"' },
+        ]
+      },
+      {
+        title: 'Configure Session.vi — Open Output Hardware',
+        vi: 'Configure Session.vi',
+        desc: 'Open the connection to your output hardware and prepare to receive setpoint values from the user.',
+        checks: [
+          { text: 'Call <code>Read Parameter.vi</code> to get VISA resource name, output range, etc.' },
+          { text: 'Open your output hardware session (power supply, actuator, Modbus device, etc.)' },
+          { text: 'Store the hardware reference in class private data' },
+          { text: 'Set any initial output state (e.g., safe default voltage)' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Error handling defaults cause infinite retry loops', body: 'If hardware fails to connect, FlexLogger retries Cleanup → Configure indefinitely.', fix: 'Override Handle Processing Error.vi and set to "Cleanup and Finalize".' },
+        ],
+        viRefs: [
+          { icon: '📋', name: 'Plugin:Read Parameter.vi', desc: 'Reads current user configuration values' },
+        ]
+      },
+      {
+        title: 'Process.vi — Read Setpoints & Drive Hardware',
+        vi: 'Process.vi',
+        desc: 'Read the latest setpoint values entered by the user in FlexLogger and send them to your output hardware.',
+        checks: [
+          { text: 'Call <code>Read Setpoints.vi</code> to get the latest user-entered values' },
+          { text: 'Validate the values (range check, safety limits)' },
+          { text: 'Send the values to your output hardware' },
+          { text: 'Handle communication errors without crashing the plug-in' },
+        ],
+        pitfalls: [
+          { type: 'warning', icon: '🟡', title: 'Sharing data between Handle Notification and Process.vi', body: 'If you add command buttons, Handle Notification runs in a separate thread. Direct access to class data causes race conditions.', fix: 'Use a Data Value Reference (DVR) to safely share state.' },
+        ],
+        viRefs: [
+          { icon: '📥', name: 'Read Setpoints.vi', desc: 'Returns the most recent scalar value for each setpoint channel' },
+        ]
+      },
+      {
+        title: 'Cleanup & Build',
+        vi: 'Cleanup Session.vi',
+        desc: 'Set hardware to a safe state, close connections, build the packed library.',
+        checks: [
+          { text: 'In <code>Cleanup Session.vi</code>: set hardware to a <strong>safe default state</strong> before closing' },
+          { text: 'Close the hardware session' },
+          { text: 'Right-click <strong>Packed Library</strong> build spec → <strong>Build</strong>' },
+          { text: 'Verify folder name, .lvlibp, and .xml <strong>all match exactly</strong>' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'File naming mismatch = silent failure', body: 'FlexLogger silently skips plug-ins with mismatched file names.', fix: 'Verify all three names match after every build.' },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Test & Validate',
+        vi: null,
+        desc: 'Verify setpoint values reach your hardware correctly.',
+        checks: [
+          { text: 'Test in <code>Plugin Environment Simulator.vi</code> — enter setpoint values and verify hardware responds' },
+          { text: 'Deploy to FlexLogger → add the plug-in → configure parameters' },
+          { text: 'Enter setpoint values during a live test and measure hardware output' },
+          { text: 'Test edge cases: zero, max range, rapid value changes' },
+          { text: 'Verify safe shutdown: stop the test and confirm hardware returns to safe state' },
+        ],
+        pitfalls: [],
+        viRefs: []
+      },
+    ]
+  },
+
+  command: {
+    title: 'Command Button (Add-On)',
+    badge: 'Command',
+    badgeStyle: 'background:rgba(0,75,141,0.15);color:#1DB1DE;border:1px solid rgba(0,75,141,0.3);',
+    accentColor: '#1DB1DE',
+    steps: [
+      {
+        title: 'Prerequisites',
+        vi: null,
+        desc: 'Commands are an add-on feature — not a standalone template. You need an existing plug-in (Producer, Calculator, or Consumer) to add a command button to.',
+        checks: [
+          { text: 'You have a working plug-in built from one of the three templates' },
+          { text: 'Your plug-in\'s Initialize.vi, Configure Session.vi, and Process.vi are functional' },
+          { text: 'You understand what action the command button should trigger (tare, zero, calibrate, etc.)' },
+        ],
+        pitfalls: [
+          { type: 'info', icon: '🔵', title: 'Commands are not a template', body: 'You cannot create a plug-in that is only a command button. Commands are added on top of an existing Producer, Calculator, or Consumer plug-in.', fix: null },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Initialize.vi — Register the Command',
+        vi: 'Initialize.vi',
+        desc: 'Add a Command-type parameter to your existing Initialize.vi. This creates a button in the FlexLogger UI.',
+        checks: [
+          { text: 'Call <code>Write Parameter.vi</code> with data type = <strong>Command</strong>' },
+          { text: 'Set the parameter name to describe the action (e.g., "Tare", "Zero Scale", "Calibrate")' },
+          { text: 'The command parameter will appear as a clickable button in FlexLogger\'s plug-in config panel' },
+        ],
+        pitfalls: [],
+        viRefs: [
+          { icon: '📝', name: 'Plugin:Write Parameter.vi', desc: 'Use the "Command" data type to create a button' },
+        ]
+      },
+      {
+        title: 'Handle Notification.vi — Implement the Action',
+        vi: 'Handle Notification.vi (Override)',
+        desc: 'Override this VI to respond when the user clicks the command button. Runs asynchronously in its own thread.',
+        checks: [
+          { text: 'Override <code>Handle Notification.vi</code> in your plug-in class' },
+          { text: 'Check the notification type to identify which command was triggered' },
+          { text: 'Implement the action (tare scale, reset counter, trigger calibration, etc.)' },
+          { text: 'Use a <strong>Data Value Reference (DVR)</strong> to share state with Process.vi — never access class private data directly' },
+        ],
+        pitfalls: [
+          { type: 'critical', icon: '🔴', title: 'Race condition: Handle Notification runs in a separate thread', body: 'Directly modifying class private data from Handle Notification causes race conditions with Process.vi.', fix: 'Always use a Data Value Reference (DVR) to safely share state between the notification handler and Process.vi.' },
+        ],
+        viRefs: []
+      },
+      {
+        title: 'Build & Test',
+        vi: null,
+        desc: 'Rebuild your plug-in with the command added and test the button in FlexLogger.',
+        checks: [
+          { text: 'Rebuild the <strong>Packed Library</strong>' },
+          { text: 'Verify file naming still matches (folder, .lvlibp, .xml)' },
+          { text: 'Deploy to FlexLogger and confirm the command button appears in the config panel' },
+          { text: 'Click the button during a live test and verify the action executes correctly' },
+          { text: 'Verify Process.vi continues running normally while the command executes' },
+        ],
+        pitfalls: [
+          { type: 'info', icon: '🔵', title: 'Plug-in changes require FlexLogger restart', body: 'Close and reopen the FlexLogger project after rebuilding to load the updated plug-in.', fix: null },
+        ],
+        viRefs: []
+      },
+    ]
+  }
+};
+
+
+// ── State ──
+let currentTemplate = null;
+let currentStepIndex = 0;
+let checkedState = {}; // { 'produce-0-2': true, ... }
+
+function launchWalkthrough(templateKey) {
+  currentTemplate = templateKey;
+  currentStepIndex = 0;
+  // Initialize check state for this template if not exists
+  const data = WALKTHROUGH_DATA[templateKey];
+  data.steps.forEach((step, si) => {
+    step.checks.forEach((_, ci) => {
+      const key = templateKey + '-' + si + '-' + ci;
+      if (!(key in checkedState)) checkedState[key] = false;
+    });
+  });
+  renderWalkthrough();
+  document.getElementById('walkthrough-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('walkthrough-overlay').scrollTop = 0;
+}
+
+function closeWalkthrough() {
+  document.getElementById('walkthrough-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+  currentTemplate = null;
+}
+
+function goToStep(idx) {
+  currentStepIndex = idx;
+  renderWalkthrough();
+  document.getElementById('walkthrough-overlay').scrollTop = 0;
+}
+
+function toggleCheck(stepIdx, checkIdx) {
+  const key = currentTemplate + '-' + stepIdx + '-' + checkIdx;
+  checkedState[key] = !checkedState[key];
+  renderWalkthrough();
+}
+
+function getStepCompletion(templateKey, stepIdx) {
+  const data = WALKTHROUGH_DATA[templateKey];
+  const step = data.steps[stepIdx];
+  if (!step.checks.length) return 1;
+  let done = 0;
+  step.checks.forEach((_, ci) => {
+    if (checkedState[templateKey + '-' + stepIdx + '-' + ci]) done++;
+  });
+  return done / step.checks.length;
+}
+
+function getTotalCompletion(templateKey) {
+  const data = WALKTHROUGH_DATA[templateKey];
+  let total = 0, done = 0;
+  data.steps.forEach((step, si) => {
+    step.checks.forEach((_, ci) => {
+      total++;
+      if (checkedState[templateKey + '-' + si + '-' + ci]) done++;
+    });
+  });
+  return total ? Math.round((done / total) * 100) : 0;
+}
+
+function renderWalkthrough() {
+  const data = WALKTHROUGH_DATA[currentTemplate];
+  const step = data.steps[currentStepIndex];
+
+  // Badge & title
+  document.getElementById('wt-badge').setAttribute('style', data.badgeStyle);
+  document.getElementById('wt-badge').textContent = data.badge;
+  document.getElementById('wt-title').textContent = data.title;
+
+  // Progress text
+  const pct = getTotalCompletion(currentTemplate);
+  document.getElementById('wt-progress-text').textContent = pct + '% complete';
+
+  // Progress bar
+  const bar = document.getElementById('wt-progress-bar');
+  let barHTML = '';
+  data.steps.forEach((s, i) => {
+    const comp = getStepCompletion(currentTemplate, i);
+    const isActive = i === currentStepIndex;
+    const isComplete = comp === 1;
+    let dotClass = 'wt-pstep-dot';
+    if (isComplete) dotClass += ' completed';
+    else if (isActive) dotClass += ' active';
+
+    barHTML += '<div class="wt-pstep" onclick="goToStep(' + i + ')">';
+    barHTML += '<div class="' + dotClass + '"><span>' + (i + 1) + '</span></div>';
+    barHTML += '<span class="wt-pstep-label">' + s.title.split(' — ')[0].split(' – ')[0] + '</span>';
+    barHTML += '</div>';
+    if (i < data.steps.length - 1) {
+      barHTML += '<div class="wt-pstep-line' + (isComplete ? ' filled' : '') + '"></div>';
+    }
+  });
+  bar.innerHTML = barHTML;
+
+  // Body
+  const body = document.getElementById('wt-body');
+  let html = '<div class="wt-step-section active">';
+
+  // Step header
+  html += '<div class="wt-step-header">';
+  html += '<div class="wt-step-number" style="background:' + data.accentColor + '">' + (currentStepIndex + 1) + '</div>';
+  html += '<h3>' + step.title + '</h3>';
+  html += '</div>';
+
+  if (step.vi) {
+    html += '<div class="wt-step-vi">' + step.vi + '</div>';
+  }
+
+  html += '<p class="wt-step-desc">' + step.desc + '</p>';
+
+  // Pitfalls (before checklist for visibility)
+  if (step.pitfalls.length) {
+    step.pitfalls.forEach(p => {
+      html += '<div class="wt-pitfall ' + p.type + '">';
+      html += '<div class="wt-pitfall-header">';
+      html += '<span class="wt-pitfall-icon">' + p.icon + '</span>';
+      html += '<span class="wt-pitfall-title">' + p.title + '</span>';
+      html += '</div>';
+      html += '<div class="wt-pitfall-body">' + p.body + '</div>';
+      if (p.fix) html += '<div class="wt-pitfall-fix">✅ ' + p.fix + '</div>';
+      html += '</div>';
+    });
+  }
+
+  // Checklist
+  if (step.checks.length) {
+    html += '<div class="wt-checklist">';
+    step.checks.forEach((c, ci) => {
+      const key = currentTemplate + '-' + currentStepIndex + '-' + ci;
+      const isChecked = checkedState[key];
+      html += '<div class="wt-check-item' + (isChecked ? ' checked' : '') + '" onclick="toggleCheck(' + currentStepIndex + ',' + ci + ')">';
+      html += '<div class="wt-checkbox"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>';
+      html += '<div class="wt-check-text">' + c.text + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // VI References
+  if (step.viRefs.length) {
+    html += '<div style="margin-top:8px;margin-bottom:8px;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;">Key VIs for This Step</div>';
+    step.viRefs.forEach(v => {
+      html += '<div class="wt-vi-ref">';
+      html += '<div class="wt-vi-ref-icon">' + v.icon + '</div>';
+      html += '<div><div class="wt-vi-ref-name">' + v.name + '</div><div class="wt-vi-ref-desc">' + v.desc + '</div></div>';
+      html += '</div>';
+    });
+  }
+
+  // Navigation
+  html += '<div class="wt-step-nav">';
+  if (currentStepIndex > 0) {
+    html += '<button class="wt-nav-btn" onclick="goToStep(' + (currentStepIndex - 1) + ')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 3L5 8l5 5"/></svg> Previous</button>';
+  } else {
+    html += '<div></div>';
+  }
+  if (currentStepIndex < data.steps.length - 1) {
+    html += '<button class="wt-nav-btn primary" onclick="goToStep(' + (currentStepIndex + 1) + ')">Next Step <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></button>';
+  } else {
+    html += '<button class="wt-nav-btn primary" onclick="closeWalkthrough()">Finish & Return <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3l5 5-5 5"/></svg></button>';
+  }
+  html += '</div>';
+
+  html += '</div>';
+  body.innerHTML = html;
+}
+
+
+// ── Export checklist ──
+function exportChecklist() {
+  if (!currentTemplate) return;
+  const data = WALKTHROUGH_DATA[currentTemplate];
+  let text = data.title + ' — Walkthrough Checklist\n';
+  text += '='.repeat(50) + '\n\n';
+
+  data.steps.forEach((step, si) => {
+    text += 'STEP ' + (si + 1) + ': ' + step.title + '\n';
+    if (step.vi) text += '  VI: ' + step.vi + '\n';
+    text += '-'.repeat(40) + '\n';
+    step.checks.forEach((c, ci) => {
+      const key = currentTemplate + '-' + si + '-' + ci;
+      const mark = checkedState[key] ? '☑' : '☐';
+      // Strip HTML tags for plain text
+      const clean = c.text.replace(/<[^>]+>/g, '');
+      text += mark + ' ' + clean + '\n';
+    });
+    if (step.pitfalls.length) {
+      text += '\n⚠ Watch out:\n';
+      step.pitfalls.forEach(p => {
+        text += '  ' + p.icon + ' ' + p.title + '\n';
+        if (p.fix) text += '    ✅ ' + p.fix + '\n';
+      });
+    }
+    text += '\n';
+  });
+
+  text += '\nGenerated from FlexLogger Plug-In Development Guide';
+
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('wt-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  }).catch(() => {
+    // Fallback: select text in a temporary textarea
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const toast = document.getElementById('wt-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2200);
+  });
+}
+
+// Keyboard: Escape to close walkthrough
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && currentTemplate) closeWalkthrough();
+});
+
+// Enter key on template cards
+document.querySelectorAll('.tpl-card').forEach(card => {
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      card.click();
+    }
+  });
+});
+</script>
+</body>
+</html>
