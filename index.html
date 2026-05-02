@@ -1469,34 +1469,33 @@
     </div>
 
     <div class="template-grid">
-      <!-- Produce Data -->
-      <div class="tpl-card produce" onclick="launchWalkthrough('produce')" tabindex="0" role="button" aria-label="Start Produce Data walkthrough">
-        <div class="tpl-label">Template A — Send Data In</div>
-        <div class="tpl-title">Produce Data for FlexLogger</div>
+      <!-- Consume Setpoint (PDF Table 1, row 1) -->
+      <div class="tpl-card consume" onclick="launchWalkthrough('consume')" tabindex="0" role="button" aria-label="Start Consume Setpoint walkthrough">
+        <div class="tpl-label">Control Output</div>
+        <div class="tpl-title">Consume Setpoint Data</div>
         <div class="tpl-flow">
-          <span class="fb hw">Your Hardware</span>
-          <span class="fa g">→</span>
+          <span class="fb ui">User Input</span>
+          <span class="fa o">→</span>
           <span class="fb plg">Plug-In</span>
-          <span class="fa g">→</span>
-          <span class="fb fl">FlexLogger</span>
+          <span class="fa o">→</span>
+          <span class="fb hw">Your Hardware</span>
         </div>
-        <div class="tpl-desc">Data flows one way: from an external device into FlexLogger. Use this when you need FlexLogger to acquire data from hardware it doesn't natively support.</div>
+        <div class="tpl-desc">Data flows outward: the user types a value in FlexLogger, and your plug-in sends it to an external output device. The user can update values during a live test.</div>
         <div class="tpl-uses">
-          <span class="use-tag">DMM / multimeter</span>
-          <span class="use-tag">Modbus read</span>
-          <span class="use-tag">Serial device</span>
-          <span class="use-tag">Synthetic signals</span>
+          <span class="use-tag">DC power supply</span>
+          <span class="use-tag">Modbus write</span>
+          <span class="use-tag">Actuators / motors</span>
         </div>
-        <div class="tpl-name">Template: Produce data for FlexLogger</div>
+        <div class="tpl-name">Template: Consume setpoint data</div>
         <div class="tpl-cta">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           Start Guided Walkthrough
         </div>
       </div>
 
-      <!-- Perform Calculation -->
+      <!-- Perform Calculation (PDF Table 1, row 2) -->
       <div class="tpl-card calculate" onclick="launchWalkthrough('calculate')" tabindex="0" role="button" aria-label="Start Perform Calculation walkthrough">
-        <div class="tpl-label">Template B — Process &amp; Transform</div>
+        <div class="tpl-label">Process &amp; Transform</div>
         <div class="tpl-title">Perform Calculation</div>
         <div class="tpl-flow">
           <span class="fb fl">FlexLogger</span>
@@ -1519,31 +1518,32 @@
         </div>
       </div>
 
-      <!-- Consume Setpoint -->
-      <div class="tpl-card consume" onclick="launchWalkthrough('consume')" tabindex="0" role="button" aria-label="Start Consume Setpoint walkthrough">
-        <div class="tpl-label">Template C — Control Output</div>
-        <div class="tpl-title">Consume Setpoint Data</div>
+      <!-- Produce Data (PDF Table 1, row 3) -->
+      <div class="tpl-card produce" onclick="launchWalkthrough('produce')" tabindex="0" role="button" aria-label="Start Produce Data walkthrough">
+        <div class="tpl-label">Send Data In</div>
+        <div class="tpl-title">Produce Data for FlexLogger</div>
         <div class="tpl-flow">
-          <span class="fb ui">User Input</span>
-          <span class="fa o">→</span>
-          <span class="fb plg">Plug-In</span>
-          <span class="fa o">→</span>
           <span class="fb hw">Your Hardware</span>
+          <span class="fa g">→</span>
+          <span class="fb plg">Plug-In</span>
+          <span class="fa g">→</span>
+          <span class="fb fl">FlexLogger</span>
         </div>
-        <div class="tpl-desc">Data flows outward: the user types a value in FlexLogger, and your plug-in sends it to an external output device. The user can update values during a live test.</div>
+        <div class="tpl-desc">Data flows one way: from an external device into FlexLogger. Use this when you need FlexLogger to acquire data from hardware it doesn't natively support.</div>
         <div class="tpl-uses">
-          <span class="use-tag">DC power supply</span>
-          <span class="use-tag">Modbus write</span>
-          <span class="use-tag">Actuators / motors</span>
+          <span class="use-tag">DMM / multimeter</span>
+          <span class="use-tag">Modbus read</span>
+          <span class="use-tag">Serial device</span>
+          <span class="use-tag">Synthetic signals</span>
         </div>
-        <div class="tpl-name">Template: Consume setpoint data</div>
+        <div class="tpl-name">Template: Produce data for FlexLogger</div>
         <div class="tpl-cta">
           <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
           Start Guided Walkthrough
         </div>
       </div>
 
-      <!-- Command (Advanced) -->
+      <!-- Command (Advanced — add-on, not a base template) -->
       <div class="tpl-card command" onclick="launchWalkthrough('command')" tabindex="0" role="button" aria-label="Start Command Button walkthrough">
         <div class="tpl-label">Advanced — Event Trigger</div>
         <div class="tpl-title">Command Button</div>
@@ -1633,7 +1633,7 @@
   <!-- ════════ PANEL 2: PLUG-IN LIFECYCLE ════════ -->
   <section role="tabpanel" class="tab-panel" id="panel-lifecycle" aria-labelledby="tab-lifecycle" aria-hidden="true">
 
-    <p class="panel-intro">FlexLogger manages your plug-in through a <strong>state machine</strong> with five states. Each state maps to a specific VI in your LabVIEW project. Understanding when each state runs — and what you should do in it — is the key to building reliable plug-ins.</p>
+    <p class="panel-intro">FlexLogger manages your plug-in through a <strong>state machine</strong> with five states. Each state maps to a specific VI in your LabVIEW project. The lifecycle is <strong>not linear</strong> — Cleanup Session runs every time the user changes a setting, looping back up to Configure Session, and only routes forward to Finalize when the plug-in is removed.</p>
 
     <div class="lifecycle">
 
@@ -1644,7 +1644,7 @@
           <div class="timing-card periodic"><span class="t-icon">🕒</span><span class="t-name">Periodic / Immediate</span><span class="t-hint">For Producers & Consumers</span></div>
           <div class="timing-card resample"><span class="t-icon">🌊</span><span class="t-name">Resampling</span><span class="t-hint">For Calculators</span></div>
         </div>
-        <div class="lc-tip danger">⚠ Choose one: <strong>Set Plugin Timing</strong> or <strong>Set Plugin Resampling</strong> — not both. Calculators that read input waveforms should use resampling.</div>
+        <div class="lc-tip danger">⚠ Choose one: <strong>Set Plugin Timing</strong> or <strong>Set Plugin Resampling</strong> — typically not both. Calculators that read input waveforms should use resampling.</div>
         <span class="lc-vi">Initialize.vi</span>
       </div>
 
@@ -1652,7 +1652,7 @@
 
       <div class="lc-node config">
         <h4><span class="lc-tag">REPEAT</span> Step 2.2 — Configure Session</h4>
-        <p>Runs every time the user changes a setting (while the test is stopped). Open hardware connections, read parameter values, and set stream timing (dt, T0) here. Store hardware references in your class private data.</p>
+        <p>Runs every time the user changes a setting (while the test is stopped), and once on initial setup. Open hardware connections, read parameter values, and set stream timing (dt, T0) here. Store hardware references in your class private data.</p>
         <span class="lc-vi">Configure Session.vi</span>
       </div>
 
@@ -1667,20 +1667,20 @@
       </div>
 
       <div class="lc-arrow"></div>
-      <div class="lc-loop">↻ User changes settings → Cleanup → Configure → Process resumes</div>
-      <div class="lc-arrow"></div>
 
       <div class="lc-node cleanup">
-        <h4><span class="lc-tag">RESET</span> Step 2.4 — Cleanup Session</h4>
-        <p>Runs before each reconfiguration and when the test stops. Close hardware connections and release every resource that Configure Session opened. This is the mirror of Configure Session.</p>
+        <h4><span class="lc-tag">REPEAT</span> Step 2.4 — Cleanup Session</h4>
+        <p>Runs when the user makes a configuration change, and again before Finalize when the plug-in is removed. Close hardware connections and release every resource that Configure Session opened. This is the mirror of Configure Session.</p>
         <span class="lc-vi">Cleanup Session.vi</span>
       </div>
+
+      <div class="lc-loop">↻ On config change: Cleanup Session loops back up to Configure Session — Finalize is skipped</div>
 
       <div class="lc-arrow"></div>
 
       <div class="lc-node final">
         <h4><span class="lc-tag">ONCE</span> Step 2.5 — Finalize</h4>
-        <p>Runs <strong>once</strong> when the plug-in is removed from the project or the project closes. Clean up anything created in Initialize. Usually empty.</p>
+        <p>Runs <strong>once</strong> when the plug-in is removed from the project or the project closes. Reached only via the removal branch from Cleanup Session. Cleans up anything created in Initialize. Usually empty.</p>
         <span class="lc-vi">Finalize.vi</span>
       </div>
 
@@ -1699,8 +1699,10 @@
         <div class="map-block lv"><h5>Step 3.2 — Open / Init Session</h5><p>Opens the hardware connection using values from the front panel. Runs once before the main loop.</p><span class="action-lbl">One-time setup before loop</span></div>
         <div class="map-block lv"><h5>Step 3.3 — While Loop Body</h5><p>Reads hardware, processes data, writes to chart. Repeats until user clicks Stop.</p><span class="action-lbl">Core logic repeats each iteration</span></div>
         <div class="map-block lv"><h5>Step 3.4 — Close / Cleanup</h5><p>Closes hardware connection, deallocates resources, handles final errors. Runs once after loop exits.</p><span class="action-lbl">Runs once after loop exits</span></div>
+        <div class="map-block lv"><h5>Step 3.5 — Final Teardown</h5><p>For VIs that allocate persistent resources (refnums, queues, DVRs), the absolute last step before the VI fully unloads.</p><span class="action-lbl">Once on full shutdown</span></div>
       </div>
       <div class="map-center">
+        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
         <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
         <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
         <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
@@ -1711,7 +1713,8 @@
         <div class="map-block fl"><span class="vi-tag">Initialize.vi</span><h5>Step 3.1 — Declare Parameters &amp; Channels</h5><p>Use <code style="font-family:var(--mono);font-size:11px;">Write Parameter</code> and <code style="font-family:var(--mono);font-size:11px;">Create Channel</code> to define what appears in FlexLogger's UI. Set the timing method.</p></div>
         <div class="map-block fl"><span class="vi-tag">Configure Session.vi</span><h5>Step 3.2 — Open Hardware Here</h5><p>Read parameter values from FlexLogger, open instrument sessions, set stream timing. Store references in <code style="font-family:var(--mono);font-size:11px;">MyPlugin.ctl</code>.</p></div>
         <div class="map-block fl"><span class="vi-tag">Process.vi</span><h5>Step 3.3 — Core Logic (No Loop Needed)</h5><p>Write only the <em>body</em> of the loop — FlexLogger calls this VI repeatedly. Read hardware → Calculate → <code style="font-family:var(--mono);font-size:11px;">Write Data</code> to FlexLogger.</p></div>
-        <div class="map-block fl"><span class="vi-tag">Cleanup Session.vi</span><h5>Step 3.4 — Close Resources Here</h5><p>Close hardware sessions, release resources. Mirror everything opened in Configure Session. Clear private data references.</p></div>
+        <div class="map-block fl"><span class="vi-tag">Cleanup Session.vi</span><h5>Step 3.4 — Close Resources Here</h5><p>Close hardware sessions, release resources. Mirror everything opened in Configure Session. Runs on every config change AND before Finalize.</p></div>
+        <div class="map-block fl"><span class="vi-tag">Finalize.vi</span><h5>Step 3.5 — Release Init Resources</h5><p>Clean up anything allocated in Initialize.vi (rare — usually empty). Runs once when the plug-in is removed or the project closes.</p></div>
       </div>
     </div>
   </section>
@@ -1761,7 +1764,8 @@
             <div class="substep"><div class="substep-num blue">3b</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Configure Session.vi</code>: read params, open hardware, set stream timing</span></div>
             <div class="substep"><div class="substep-num blue">3c</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Process.vi</code>: implement your core logic (read → calculate → write)</span></div>
             <div class="substep"><div class="substep-num blue">3d</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Cleanup Session.vi</code>: close hardware, release resources</span></div>
-            <div class="substep"><div class="substep-num blue">3e</div><span>Right-click the <strong>Packed Library</strong> build spec → <strong>Build</strong></span></div>
+            <div class="substep"><div class="substep-num blue">3e</div><span>Edit <code style="font-family:var(--mono);font-size:12px;">Finalize.vi</code>: clean up anything created in Initialize (usually empty)</span></div>
+            <div class="substep"><div class="substep-num blue">3f</div><span>Right-click the <strong>Packed Library</strong> build spec → <strong>Build</strong></span></div>
           </div>
           <div class="output-tag">Output: MyPlugin.lvlibp + MyPlugin.xml</div>
           <p style="margin-top:10px;">Build output auto-deploys to: <code style="font-family:var(--mono);font-size:11px;">%public%\Documents\National Instruments\FlexLogger\Plugins\IOPlugins\</code></p>
@@ -1800,8 +1804,8 @@
             <span style="color:#E35B39;font-weight:600;">Error state:</span><br>
             &nbsp;&nbsp;└── <span style="color:#E35B39;">DifferentName</span><span class="ft-ext">.xml</span> <span class="ft-bad">✘ Won't load</span>
           </div>
-          <p style="margin-top:8px; font-size:11px; color:var(--text-muted);">The folder name, .lvlibp filename, and .xml filename must all match exactly — or FlexLogger will silently skip the plug-in.</p>
-          <div class="tip-box info"><strong>🔍 Troubleshooting:</strong> If your plug-in doesn't appear in FlexLogger, check for an <code style="font-family:var(--mono);font-size:11px;">Error.txt</code> file inside the plug-in folder. FlexLogger creates this when XML parsing fails.</div>
+          <p style="margin-top:8px; font-size:11px; color:var(--text-muted);">Per PDF page 22, the folder name, .lvlibp filename, and .xml filename must all match. If they don't, FlexLogger may not show the plug-in in the channel picker.</p>
+          <div class="tip-box info"><strong>🔍 Troubleshooting — two failure modes:</strong> (1) <strong>Folder/file name mismatch:</strong> the plug-in simply doesn't appear under <code style="font-family:var(--mono);font-size:11px;">Add channels → Plug-in</code>. Verify all three names match. (2) <strong>XML parse failure:</strong> per PDF page 52, FlexLogger writes an <code style="font-family:var(--mono);font-size:11px;">Error.txt</code> file inside the plug-in folder describing the parse problem. Check there first if the XML is suspect.</div>
           <div class="alert-badge red" style="margin-top:12px;">⚠ You must close &amp; reopen your FlexLogger project to pick up modified plug-ins</div>
           <div class="alert-badge red" style="margin-top:6px;">⚠ FlexLogger does not support multiple plug-ins with the same name</div>
         </div>
@@ -1827,6 +1831,28 @@
           <div class="tool-tip">💡 Use "Produced by Plugin (Resampler timing)" when using Min/Max resampling — auto-adapts to input rate changes.</div>
           <div class="tool-hint">Channel IDs display best at ≤5 characters (e.g., "ai0", "Temp").</div>
           <div class="tool-used"><span>Initialize.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico g">➕</div>
+        <div class="tool-body">
+          <h5>Add Channels</h5>
+          <span class="tool-vi">Plugin:Add Channels.vi</span>
+          <p>Registers your channels with FlexLogger so they appear in the Channel Specification table. Takes the array of channels built from <code style="font-family:var(--mono);font-size:11px;">Create Channel</code> calls.</p>
+          <div class="tool-warn">🛑 Call this exactly ONCE per plug-in method. Multiple calls in the same VI cause parameter settings to silently fail to save.</div>
+          <div class="tool-used"><span>Initialize.vi</span><span>Configure Session.vi</span></div>
+        </div>
+      </div>
+
+      <div class="tool">
+        <div class="tool-ico g">✅</div>
+        <div class="tool-body">
+          <h5>Get Valid Channels</h5>
+          <span class="tool-vi">Plugin:Get Valid Channels.vi</span>
+          <p>Returns only the channels currently enabled in FlexLogger. Disabled channels (and channels removed via dynamic reconfiguration) are excluded.</p>
+          <div class="tool-tip">💡 Call at the start of <code style="font-family:var(--mono);font-size:11px;">Process.vi</code> and only write to channels in the returned list. Companion: <code style="font-family:var(--mono);font-size:11px;">Get Valid Producer Channels.vi</code> for producer-only filtering.</div>
+          <div class="tool-used"><span>Configure Session.vi</span><span>Process.vi</span></div>
         </div>
       </div>
 
@@ -1883,10 +1909,11 @@
       <div class="tool">
         <div class="tool-ico tl">📥</div>
         <div class="tool-body">
-          <h5>Read Latest Setpoints</h5>
-          <span class="tool-vi">Read Setpoints.vi</span>
-          <p>Returns the most recent scalar value for each setpoint channel. Used by consumer plug-ins to get user-entered control values.</p>
-          <div class="tool-warn">⚠ Supports DBL or Boolean only. FlexLogger cannot send string data to a plug-in.</div>
+          <h5>Read Setpoints (DBL / Digital)</h5>
+          <span class="tool-vi">Read Setpoints (DBL).vi  ·  Read Setpoints (Digital).vi</span>
+          <p>Returns the most recent scalar value for each setpoint channel. The palette ships <strong>two variants</strong>: one for DBL setpoints and one for digital (Boolean) setpoints. Use the variant matching your channel's data type.</p>
+          <div class="tool-warn">⚠ FlexLogger cannot send string data to a plug-in via setpoint channels — DBL or Boolean only.</div>
+          <div class="tool-hint">Companion: <code style="font-family:var(--mono);font-size:11px;">Read 1D Wfm (Digital).vi</code> exists alongside <code style="font-family:var(--mono);font-size:11px;">Read 1D Wfm (DBL).vi</code> when you need analog and digital input data in the same Process.vi.</div>
           <div class="tool-used"><span>Process.vi</span></div>
         </div>
       </div>
@@ -1923,9 +1950,9 @@
     <div class="pitfalls">
 
       <div class="pitfall">
-        <h5>🔴 Error handling defaults can cause infinite retry loops</h5>
-        <p>By default, when a plug-in encounters an error, FlexLogger's base class runs Cleanup → Configure again. If the error persists (e.g., hardware disconnected), this creates an infinite loop of failed reconfiguration attempts.</p>
-        <p class="fix">✅ Fix: Override <code style="font-family:var(--mono);font-size:12px;">Handle Processing Error.vi</code> and set it to "Cleanup and Finalize" for hardware plug-ins. This stops the retry loop and waits for the user to manually change a setting. Use "Reporting Continues" for non-critical errors you just want to log.</p>
+        <h5>🔴 Error handling defaults can cause repeated reconfiguration attempts</h5>
+        <p>When a plug-in encounters an error during Configure Session (e.g., hardware not present), FlexLogger's base error handling can trigger Cleanup → Configure cycles that retry the failed setup. If the underlying issue persists, this can manifest as repeated reconfiguration attempts.</p>
+        <p class="fix">✅ Mitigation: Override the error handling behavior so that, on Configure errors, the plug-in stops trying to reconfigure and waits for the user to change a setting. <em>This guidance comes from the FlexLogger Plug-In Development Kit API Reference (linked from PDF page 4), not the User Manual itself — verify the exact VI name and modes against your installed PDK version.</em></p>
       </div>
 
       <div class="pitfall">
@@ -1936,8 +1963,8 @@
 
       <div class="pitfall">
         <h5>🔴 File naming mismatch prevents plug-in from loading</h5>
-        <p>FlexLogger silently skips plug-ins where the folder name, .lvlibp filename, and .xml filename don't match exactly. No error message appears — the plug-in just doesn't show up.</p>
-        <p class="fix">✅ Fix: After building, verify all three names match. Check for an Error.txt file in the plug-in folder if the plug-in doesn't appear.</p>
+        <p>Per PDF page 22, the folder name, .lvlibp filename, and .xml filename must all match. If they don't, the plug-in won't appear in <code style="font-family:var(--mono);font-size:12px;">Add channels → Plug-in</code>.</p>
+        <p class="fix">✅ Fix: After building, verify all three names match. Two distinct failure modes to check: (1) name mismatch — plug-in just won't appear; (2) XML parse failure — per PDF page 52, FlexLogger writes <code style="font-family:var(--mono);font-size:12px;">Error.txt</code> inside the plug-in folder with details.</p>
       </div>
 
       <div class="pitfall">
@@ -1947,9 +1974,9 @@
       </div>
 
       <div class="pitfall">
-        <h5>🟡 Calculators using "Periodic" timing instead of "On Data Ready"</h5>
-        <p>A calculation plug-in that uses Periodic timing may run before new input data is available, wasting cycles. The R&amp;D team recommends "On Data Ready" for calculation plug-ins.</p>
-        <p class="fix">✅ Fix: In Initialize.vi, set timing to On Data Ready with a timeout of -1 (wait forever for data) or a positive value if you want a heartbeat.</p>
+        <h5>🟡 Calculators that read FlexLogger channels should use Resampling, not Timing</h5>
+        <p>Per PDF page 33, plug-ins that read waveform data from other FlexLogger channels should set <strong>Resampling Parameters</strong> (Set Plugin Resampling) rather than <strong>Timing Parameters</strong> (Set Plugin Timing). Resampling triggers Process.vi when time-aligned input data is ready; periodic timing fires on a fixed clock regardless of input availability.</p>
+        <p class="fix">✅ Fix: In Initialize.vi for calculators, use <code style="font-family:var(--mono);font-size:12px;">Set Plugin Resampling</code> with the appropriate mode (Minimum, Maximum, Custom, or Original Rate). Set Drift Tolerance and Block Size to control how the resampler waits for aligned data.</p>
       </div>
 
       <div class="pitfall">
@@ -1979,13 +2006,7 @@
       <div class="pitfall">
         <h5>🔵 Plug-in changes require FlexLogger restart</h5>
         <p>After rebuilding a plug-in, FlexLogger doesn't automatically detect the update. You must close and reopen the project (or restart FlexLogger) to load the new version.</p>
-        <p class="fix">✅ Tip: During development, keep FlexLogger closed while rebuilding. The NI team is aware of this limitation and working on a refresh mechanism.</p>
-      </div>
-
-      <div class="pitfall">
-        <h5>🔵 PDK plug-ins vs. Measurement Plug-ins — know the difference</h5>
-        <p>FlexLogger supports two extension systems: PDK plug-ins (this guide) and Measurement Plug-ins. Measurement plug-ins are simpler but have no state machine — they're a single reentrant VI with no Initialize/Cleanup lifecycle. That makes them poor for hardware integration.</p>
-        <p class="fix">✅ Tip: Use PDK plug-ins when you need hardware control, stateful initialization, or complex lifecycle management. Use Measurement Plug-ins for simple, stateless calculations on existing channels.</p>
+        <p class="fix">✅ Tip: During development, keep FlexLogger closed while rebuilding.</p>
       </div>
 
     </div>
@@ -2120,7 +2141,7 @@ const WALKTHROUGH_DATA = {
           { text: 'Call <code>Set Stream Timing.vi</code> to set dt (sample interval) and T0 (start time)' },
         ],
         pitfalls: [
-          { type: 'critical', icon: '🔴', title: 'Error handling defaults cause infinite retry loops', body: 'If hardware fails to open, FlexLogger runs Cleanup → Configure in an infinite loop by default.', fix: 'Override Handle Processing Error.vi and set to "Cleanup and Finalize" for hardware plug-ins.' },
+          { type: 'warning', icon: '🟡', title: 'Hardware-open errors can trigger reconfiguration retries', body: 'If your hardware fails to open in Configure Session, default error handling may cycle Cleanup → Configure as the user adjusts settings. This can look like repeated retry attempts.', fix: 'See the PDK API Reference (linked from PDF page 4) for guidance on overriding the error-handling behavior for hardware plug-ins. Not documented in the User Manual.' },
           { type: 'warning', icon: '🟡', title: 'Timestamp overlaps when writing waveforms', body: 'Incorrect dt or T0 configuration causes waveform timestamp overlaps that break visualization and logging.', fix: 'Use Set Stream Timing.vi here to properly configure dt and start time.' },
         ],
         viRefs: [
@@ -2212,12 +2233,12 @@ const WALKTHROUGH_DATA = {
           { text: 'Call <code>Write Parameter.vi</code> to create any config parameters (e.g., calculation mode, thresholds)' },
           { text: 'Create <strong>output</strong> channel(s) with direction = <strong>"Produced by Plugin (Resampler timing)"</strong>' },
           { text: 'Build array of all channels → call <code>Add Channels</code> <strong>once</strong>' },
-          { text: 'Call <code>Set Plugin Resampling</code> → choose resampling mode (Minimum, Maximum, or Decimation)' },
-          { text: 'Set timing to <strong>On Data Ready</strong> with timeout = <strong>-1</strong> (wait forever for input data)' },
+          { text: 'Call <code>Set Plugin Resampling</code> → choose mode: <strong>Minimum</strong>, <strong>Maximum</strong>, <strong>Custom</strong> (fixed rate), or <strong>Original Rate</strong> (no resampling — single input only)' },
+          { text: 'Set <strong>Drift Tolerance</strong> (history retained for time-aligned data) and <strong>Block Size</strong> (minimum overlap before Process runs) — and <strong>Resampling Rate</strong> if using Custom mode' },
         ],
         pitfalls: [
           { type: 'critical', icon: '🔴', title: 'Never call Add Channels more than once', body: 'Multiple calls cause parameter settings to silently fail to save.', fix: 'Build a complete array of all channels, then call Add Channels once.' },
-          { type: 'warning', icon: '🟡', title: 'Don\'t use Periodic timing for calculators', body: 'Periodic timing may fire Process.vi before new input data is available, wasting cycles.', fix: 'Use "On Data Ready" with a timeout of -1 or a positive heartbeat value.' },
+          { type: 'warning', icon: '🟡', title: 'Don\'t mix Set Plugin Timing and Set Plugin Resampling', body: 'For most calculators, Set Plugin Resampling alone is correct — it triggers Process.vi when time-aligned input data arrives. Per the PDK manual, the two VIs are typically mutually exclusive in Initialize.vi.', fix: 'Use Set Plugin Resampling only. The documented exception is when plug-in timing is not driven by input data — then Set Plugin Timing may also be used.' },
         ],
         viRefs: [
           { icon: '🏷️', name: 'Create Channel.vi', desc: 'Use "Produced by Plugin (Resampler timing)" for output channels' },
@@ -2337,7 +2358,7 @@ const WALKTHROUGH_DATA = {
           { text: 'Set any initial output state (e.g., safe default voltage)' },
         ],
         pitfalls: [
-          { type: 'critical', icon: '🔴', title: 'Error handling defaults cause infinite retry loops', body: 'If hardware fails to connect, FlexLogger retries Cleanup → Configure indefinitely.', fix: 'Override Handle Processing Error.vi and set to "Cleanup and Finalize".' },
+          { type: 'warning', icon: '🟡', title: 'Hardware-connect errors can trigger reconfiguration retries', body: 'If hardware fails to connect, default error handling may cycle Cleanup → Configure as settings are adjusted.', fix: 'See the PDK API Reference (linked from PDF page 4) for error-handling override guidance. Not documented in the User Manual.' },
         ],
         viRefs: [
           { icon: '📋', name: 'Plugin:Read Parameter.vi', desc: 'Reads current user configuration values' },
