@@ -726,19 +726,6 @@
      ═══════════════════════════════════════════ */
   .bd-ui { max-width: 1480px; margin: 0 auto; }
 
-  .bd-ui-mobile-notice {
-    display: none;
-    padding: 24px;
-    background: var(--bg-card);
-    border: 1px dashed var(--border-subtle);
-    border-radius: var(--radius);
-    text-align: center;
-    font-size: 13px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-    margin-bottom: 20px;
-  }
-
   .bd-ui-controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
   .bd-ui-control-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .bd-ui-control-label {
@@ -1122,12 +1109,6 @@
     background: rgba(0,0,0,0.3);
     padding: 1px 6px;
     border-radius: 3px;
-  }
-
-  @media (max-width: 1023px) {
-    .bd-ui-stage { display: none; }
-    .bd-ui-info { display: none !important; }
-    .bd-ui-mobile-notice { display: block; }
   }
 
   /* ═══════════════════════════════════════════
@@ -2102,10 +2083,6 @@
     <p class="panel-intro">Pick a template and a method to see the real LabVIEW block diagram alongside the FlexLogger UI surfaces it controls. <strong>Click any terminal</strong> in the BD to see where it lands in the application; click any UI surface to see which terminal drives it. A searchable cheat-sheet table below covers every PDK VI's terminal-to-UI mapping. <em>Source: NI Plug-In Development API Reference (2025-11-09).</em></p>
 
     <div class="bd-ui">
-
-      <div class="bd-ui-mobile-notice">
-        The interactive Block Diagram ↔ UI viewer is desktop-only (≥&nbsp;1024&nbsp;px). The cheat-sheet table below remains usable at any width.
-      </div>
 
       <!-- Controls -->
       <div class="bd-ui-controls">
