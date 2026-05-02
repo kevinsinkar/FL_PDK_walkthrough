@@ -722,6 +722,415 @@
   .map-circle { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
 
   /* ═══════════════════════════════════════════
+     PANEL 3 (NEW): BLOCK DIAGRAM ↔ FLEXLOGGER UI
+     ═══════════════════════════════════════════ */
+  .bd-ui { max-width: 1480px; margin: 0 auto; }
+
+  .bd-ui-mobile-notice {
+    display: none;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .bd-ui-controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .bd-ui-control-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .bd-ui-control-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 78px;
+  }
+  .bd-ui-seg {
+    display: inline-flex;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    gap: 2px;
+  }
+  .bd-ui-seg button {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .bd-ui-seg button:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+  .bd-ui-seg button.active {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .bd-ui-seg.tpl button.active[data-template="producer"] { color: var(--success-green); }
+  .bd-ui-seg.tpl button.active[data-template="calculator"] { color: var(--calc-blue-light); }
+  .bd-ui-seg.tpl button.active[data-template="consumer"] { color: var(--lv-orange-light); }
+
+  .bd-ui-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .bd-ui-side {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+  .bd-ui-side-header {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .bd-ui-side-title { color: var(--text-primary); }
+  .bd-ui-side-hint { font-size: 10px; color: var(--text-muted); font-family: var(--mono); letter-spacing: 0.4px; }
+  .bd-ui-canvas { position: relative; flex: 1; padding: 16px; overflow: auto; }
+
+  .bd-ui-bd-wrap { position: relative; display: block; width: 100%; }
+  .bd-ui-bd-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background: #fff;
+  }
+  .bd-ui-svg { position: absolute; inset: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
+  .bd-ui-hotspot {
+    position: absolute;
+    border: 2px dashed rgba(0,173,124,0.55);
+    border-radius: 4px;
+    background: rgba(0,173,124,0.06);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    z-index: 4;
+    padding: 0;
+  }
+  .bd-ui-hotspot:hover {
+    background: rgba(0,173,124,0.18);
+    border-color: var(--ni-green);
+    box-shadow: 0 0 0 3px rgba(0,173,124,0.18);
+  }
+  .bd-ui-hotspot.active {
+    border-style: solid;
+    border-color: var(--ni-green);
+    background: rgba(0,173,124,0.22);
+    box-shadow: 0 0 0 3px rgba(0,173,124,0.3), 0 0 18px rgba(0,173,124,0.45);
+    animation: bdPulse 1.4s ease-in-out infinite;
+  }
+  .bd-ui-hotspot.invisible-mapping {
+    border-color: rgba(159,181,164,0.45);
+    background: rgba(159,181,164,0.04);
+  }
+  .bd-ui-hotspot.invisible-mapping:hover {
+    border-color: var(--text-secondary);
+    background: rgba(159,181,164,0.14);
+    box-shadow: 0 0 0 3px rgba(159,181,164,0.12);
+  }
+  .bd-ui-hotspot.invisible-mapping.active {
+    border-color: var(--text-secondary);
+    background: rgba(159,181,164,0.2);
+    box-shadow: 0 0 0 3px rgba(159,181,164,0.25), 0 0 18px rgba(159,181,164,0.3);
+  }
+  @keyframes bdPulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(0,173,124,0.3), 0 0 18px rgba(0,173,124,0.45); }
+    50%      { box-shadow: 0 0 0 5px rgba(0,173,124,0.4), 0 0 26px rgba(0,173,124,0.6); }
+  }
+
+  .bd-ui-bd-note {
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  .bd-ui-surface-list { display: flex; flex-direction: column; gap: 12px; }
+  .bd-ui-surface {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    overflow: hidden;
+    transition: all 0.18s ease;
+    cursor: pointer;
+  }
+  .bd-ui-surface:hover { border-color: var(--text-muted); }
+  .bd-ui-surface.active {
+    border-color: var(--ni-green);
+    box-shadow: 0 0 0 2px rgba(0,173,124,0.25), 0 0 24px rgba(0,173,124,0.18);
+    background: rgba(0,173,124,0.04);
+  }
+  .bd-ui-surface.invisible {
+    border-style: dashed;
+    opacity: 0.7;
+  }
+  .bd-ui-surface-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .bd-ui-surface.active .bd-ui-surface-head { background: rgba(0,173,124,0.08); }
+  .bd-ui-surface-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(0,173,124,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .bd-ui-surface.invisible .bd-ui-surface-icon { background: rgba(159,181,164,0.1); }
+  .bd-ui-surface-body { padding: 12px 14px 14px; }
+  .bd-ui-surface-placeholder {
+    background: repeating-linear-gradient(135deg,
+      rgba(159,181,164,0.04) 0 12px,
+      rgba(159,181,164,0.08) 12px 24px);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-xs);
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.4px;
+    padding: 16px 14px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .bd-ui-surface-affects {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .bd-ui-info {
+    margin: 4px 0 0;
+    padding: 16px 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--ni-green);
+    border-radius: var(--radius);
+    display: none;
+  }
+  .bd-ui-info.active { display: block; }
+  .bd-ui-info-vi {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ni-green-light);
+    margin-bottom: 4px;
+  }
+  .bd-ui-info-term {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+  }
+  .bd-ui-info-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .bd-ui-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+  .bd-ui-badge.scope-init { background: rgba(37,48,96,0.7); color: #ECECED; }
+  .bd-ui-badge.scope-config { background: rgba(0,173,124,0.18); color: var(--success-green); }
+  .bd-ui-badge.scope-process { background: rgba(0,75,141,0.22); color: var(--calc-blue-light); }
+  .bd-ui-badge.scope-cleanup { background: rgba(227,91,57,0.18); color: var(--consumer-orange); }
+  .bd-ui-badge.invisible { background: rgba(159,181,164,0.12); color: var(--text-secondary); }
+  .bd-ui-info-note { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .bd-ui-info-impact {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: rgba(245,212,0,0.06);
+    border-left: 2px solid var(--lv-yellow);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .bd-ui-info-impact strong { color: var(--lv-yellow); }
+  .bd-ui-info-jump {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0,173,124,0.12);
+    border: 1px solid rgba(0,173,124,0.3);
+    color: var(--ni-green-light);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .bd-ui-info-jump:hover { background: rgba(0,173,124,0.22); }
+
+  .bd-ui-cheatsheet { margin-top: 8px; }
+  .bd-ui-cheatsheet-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .bd-ui-cheatsheet-controls input,
+  .bd-ui-cheatsheet-controls select {
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    outline: none;
+  }
+  .bd-ui-cheatsheet-controls input { flex: 1; min-width: 220px; }
+  .bd-ui-cheatsheet-controls input:focus,
+  .bd-ui-cheatsheet-controls select:focus { border-color: var(--border-focus); }
+  .bd-ui-cheatsheet-table-wrap {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+    max-height: 520px;
+    overflow-y: auto;
+  }
+  .bd-ui-cs-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12.5px;
+  }
+  .bd-ui-cs-table thead { position: sticky; top: 0; z-index: 1; }
+  .bd-ui-cs-table thead th {
+    background: var(--bg-elevated);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+  }
+  .bd-ui-cs-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .bd-ui-cs-table tbody tr:last-child td { border-bottom: none; }
+  .bd-ui-cs-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .bd-ui-cs-vi {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  .bd-ui-cs-term { color: var(--text-primary); }
+  .bd-ui-cs-empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  .bd-ui-naming {
+    margin-top: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 4px 0;
+  }
+  .bd-ui-naming summary {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .bd-ui-naming summary::-webkit-details-marker { display: none; }
+  .bd-ui-naming summary::before {
+    content: '▸';
+    transition: transform var(--transition);
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+  .bd-ui-naming[open] summary::before { transform: rotate(90deg); }
+  .bd-ui-naming summary:hover { color: var(--text-primary); }
+  .bd-ui-naming-body {
+    padding: 8px 18px 16px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+  .bd-ui-naming-body ul { margin: 6px 0 0 18px; }
+  .bd-ui-naming-body li { margin-bottom: 6px; }
+  .bd-ui-naming-body code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(0,0,0,0.3);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  @media (max-width: 1023px) {
+    .bd-ui-stage { display: none; }
+    .bd-ui-info { display: none !important; }
+    .bd-ui-mobile-notice { display: block; }
+  }
+
+  /* ═══════════════════════════════════════════
      PANEL 4: STEP-BY-STEP DEVELOPMENT
      ═══════════════════════════════════════════ */
   .dev-timeline {
@@ -1442,7 +1851,7 @@
     <span class="tab-step">2</span>Plug-In Lifecycle
   </button>
   <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-mapping" id="tab-mapping" tabindex="-1">
-    <span class="tab-step">3</span>LabVIEW ↔ Plug-In Mapping
+    <span class="tab-step">3</span>Block Diagram ↔ UI
   </button>
   <button role="tab" class="tab-btn" aria-selected="false" aria-controls="panel-dev" id="tab-dev" tabindex="-1">
     <span class="tab-step">4</span>Step-by-Step Build
@@ -1687,35 +2096,113 @@
     </div>
   </section>
 
-  <!-- ════════ PANEL 3: CODE MAPPING ════════ -->
+  <!-- ════════ PANEL 3: BLOCK DIAGRAM ↔ FLEXLOGGER UI ════════ -->
   <section role="tabpanel" class="tab-panel" id="panel-mapping" aria-labelledby="tab-mapping" aria-hidden="true">
 
-    <p class="panel-intro">If you already know how to build a standalone LabVIEW VI that talks to hardware, you're halfway there. This side-by-side shows how each part of a standard VI maps to the FlexLogger plug-in structure. The key difference: <strong>FlexLogger manages the loop for you.</strong></p>
+    <p class="panel-intro">Pick a template and a method to see the real LabVIEW block diagram alongside the FlexLogger UI surfaces it controls. <strong>Click any terminal</strong> in the BD to see where it lands in the application; click any UI surface to see which terminal drives it. A searchable cheat-sheet table below covers every PDK VI's terminal-to-UI mapping. <em>Source: NI Plug-In Development API Reference (2025-11-09).</em></p>
 
-    <div class="mapping-grid">
-      <div class="map-col">
-        <div class="map-header lv">Standard LabVIEW VI</div>
-        <div class="map-block lv"><h5>Step 3.1 — Front Panel Controls</h5><p>User-facing inputs: COM port, baud rate, device name, sample rate. User enters values before running.</p><span class="action-lbl">User enters config values</span></div>
-        <div class="map-block lv"><h5>Step 3.2 — Open / Init Session</h5><p>Opens the hardware connection using values from the front panel. Runs once before the main loop.</p><span class="action-lbl">One-time setup before loop</span></div>
-        <div class="map-block lv"><h5>Step 3.3 — While Loop Body</h5><p>Reads hardware, processes data, writes to chart. Repeats until user clicks Stop.</p><span class="action-lbl">Core logic repeats each iteration</span></div>
-        <div class="map-block lv"><h5>Step 3.4 — Close / Cleanup</h5><p>Closes hardware connection, deallocates resources, handles final errors. Runs once after loop exits.</p><span class="action-lbl">Runs once after loop exits</span></div>
-        <div class="map-block lv"><h5>Step 3.5 — Final Teardown</h5><p>For VIs that allocate persistent resources (refnums, queues, DVRs), the absolute last step before the VI fully unloads.</p><span class="action-lbl">Once on full shutdown</span></div>
+    <div class="bd-ui">
+
+      <div class="bd-ui-mobile-notice">
+        The interactive Block Diagram ↔ UI viewer is desktop-only (≥&nbsp;1024&nbsp;px). The cheat-sheet table below remains usable at any width.
       </div>
-      <div class="map-center">
-        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
-        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
-        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
-        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
-        <div class="map-dot"><span class="map-line"></span><span class="map-circle"></span><span class="map-line"></span></div>
+
+      <!-- Controls -->
+      <div class="bd-ui-controls">
+        <div class="bd-ui-control-row">
+          <span class="bd-ui-control-label">Template</span>
+          <div class="bd-ui-seg tpl">
+            <button data-template="producer" class="active">Producer</button>
+            <button data-template="calculator">Calculator</button>
+            <button data-template="consumer">Consumer</button>
+          </div>
+        </div>
+        <div class="bd-ui-control-row">
+          <span class="bd-ui-control-label">Method</span>
+          <div class="bd-ui-seg" id="bd-ui-method-seg"></div>
+        </div>
       </div>
-      <div class="map-col">
-        <div class="map-header fl">FlexLogger Plug-In Structure</div>
-        <div class="map-block fl"><span class="vi-tag">Initialize.vi</span><h5>Step 3.1 — Declare Parameters &amp; Channels</h5><p>Use <code style="font-family:var(--mono);font-size:11px;">Write Parameter</code> and <code style="font-family:var(--mono);font-size:11px;">Create Channel</code> to define what appears in FlexLogger's UI. Set the timing method.</p></div>
-        <div class="map-block fl"><span class="vi-tag">Configure Session.vi</span><h5>Step 3.2 — Open Hardware Here</h5><p>Read parameter values from FlexLogger, open instrument sessions, set stream timing. Store references in <code style="font-family:var(--mono);font-size:11px;">MyPlugin.ctl</code>.</p></div>
-        <div class="map-block fl"><span class="vi-tag">Process.vi</span><h5>Step 3.3 — Core Logic (No Loop Needed)</h5><p>Write only the <em>body</em> of the loop — FlexLogger calls this VI repeatedly. Read hardware → Calculate → <code style="font-family:var(--mono);font-size:11px;">Write Data</code> to FlexLogger.</p></div>
-        <div class="map-block fl"><span class="vi-tag">Cleanup Session.vi</span><h5>Step 3.4 — Close Resources Here</h5><p>Close hardware sessions, release resources. Mirror everything opened in Configure Session. Runs on every config change AND before Finalize.</p></div>
-        <div class="map-block fl"><span class="vi-tag">Finalize.vi</span><h5>Step 3.5 — Release Init Resources</h5><p>Clean up anything allocated in Initialize.vi (rare — usually empty). Runs once when the plug-in is removed or the project closes.</p></div>
+
+      <!-- Stage -->
+      <div class="bd-ui-stage">
+        <div class="bd-ui-side">
+          <div class="bd-ui-side-header">
+            <span class="bd-ui-side-title">LabVIEW Block Diagram</span>
+            <span class="bd-ui-side-hint">click terminals →</span>
+          </div>
+          <div class="bd-ui-canvas" id="bd-ui-bd-canvas"></div>
+        </div>
+        <div class="bd-ui-side">
+          <div class="bd-ui-side-header">
+            <span class="bd-ui-side-title">FlexLogger UI Surfaces</span>
+            <span class="bd-ui-side-hint">← click surfaces</span>
+          </div>
+          <div class="bd-ui-canvas" id="bd-ui-ui-canvas"></div>
+        </div>
       </div>
+
+      <!-- Active terminal info -->
+      <div class="bd-ui-info" id="bd-ui-info"></div>
+
+      <!-- Cheatsheet -->
+      <h3 class="section-title" style="margin-top:36px;">Full Terminal → UI Cheat-Sheet</h3>
+      <p class="section-desc">Every PDK VI terminal and the FlexLogger UI surface it affects. Filter by category or destination, or search by VI / terminal name.</p>
+      <div class="bd-ui-cheatsheet">
+        <div class="bd-ui-cheatsheet-controls">
+          <input type="search" id="bd-ui-search" placeholder="Search VI or terminal…" aria-label="Search cheat-sheet">
+          <select id="bd-ui-filter-cat" aria-label="Filter by category">
+            <option value="">All categories</option>
+            <option value="Common">Common</option>
+            <option value="Channel Management">Channel Management</option>
+            <option value="Channel Creation">Channel Creation</option>
+            <option value="Plug-in Param">Plug-in Param</option>
+            <option value="Channel Param">Channel Param</option>
+            <option value="Data">Data Read / Write</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+          <select id="bd-ui-filter-surface" aria-label="Filter by UI surface">
+            <option value="">All UI surfaces</option>
+            <option value="channel-spec">Channel Specification</option>
+            <option value="plugin-properties">Plug-in Properties dialog</option>
+            <option value="channel-properties">Per-channel Properties pane</option>
+            <option value="channel-viewer">Channel Viewer</option>
+            <option value="setpoint-widget">Setpoint widget</option>
+            <option value="tdms-log">TDMS log artifact</option>
+            <option value="errors-pane">Errors and Warnings pane</option>
+            <option value="plugin-header">Plug-in header / Command button</option>
+            <option value="no-ui">No UI mapping</option>
+          </select>
+        </div>
+        <div class="bd-ui-cheatsheet-table-wrap">
+          <table class="bd-ui-cs-table">
+            <thead>
+              <tr>
+                <th>VI</th>
+                <th>Terminal</th>
+                <th>UI Surface</th>
+                <th>Scope</th>
+                <th>Effect</th>
+              </tr>
+            </thead>
+            <tbody id="bd-ui-cs-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Naming notes -->
+      <details class="bd-ui-naming">
+        <summary>Naming notes (canonical vs. internal docs)</summary>
+        <div class="bd-ui-naming-body">
+          Where the internal VI-to-UI mapping document and the public NI Plug-In Development API Reference disagree, the API Reference name is canonical. Notable cases:
+          <ul>
+            <li><code>Create Channel_v2 VI</code> — single polymorphic VI in the API Reference. The internal doc splits it into <code>Create Producer Channel_v2</code>, <code>Create Setpoint Consumer Channel</code>, and <code>Create Derived Time Producer Channel_v2</code>; those are use-site modes of the polymorphic VI, not separate VIs. Both names refer to the same operation.</li>
+            <li><code>Plugin Write *</code> vs. <code>Channel Write *</code> — the palette shows both as <em>Write Parameter</em>. The plug-in level creates controls in the plug-in's top-level Properties dialog; the channel level creates controls in the per-channel Properties pane.</li>
+            <li>Set Plugin Timing's <em>Triggered</em> mode is documented in the API Reference but is reserved / not supported.</li>
+            <li>The API Reference spells channel-mapping VIs <code>Read Latest Setpoints By Channel Identifier</code>; the toolbox tab abbreviates this as <em>Read Setpoints</em>.</li>
+          </ul>
+        </div>
+      </details>
+
     </div>
   </section>
 
@@ -2716,6 +3203,557 @@ document.querySelectorAll('.tpl-card').forEach(card => {
     }
   });
 });
+
+
+// ═══════════════════════════════════════════════
+// PANEL 3: BLOCK DIAGRAM ↔ FLEXLOGGER UI MAPPING
+// ═══════════════════════════════════════════════
+const BD_UI_MAP = (function() {
+
+  const surfaces = {
+    'channel-spec': {
+      label: 'Channel Specification panel',
+      icon: '📋',
+      where: 'Left pane in FlexLogger — channel rows under collapsible Display Group headings, with Name / Unit / Data Type / Enabled columns.',
+      visible: true
+    },
+    'plugin-properties': {
+      label: 'Plug-in Properties dialog',
+      icon: '⚙️',
+      where: 'Top-level Configuration dialog opened by the Configure gear on the plug-in header.',
+      visible: true
+    },
+    'channel-properties': {
+      label: 'Per-channel Properties pane',
+      icon: '🔧',
+      where: 'Right pane / channel detail dialog shown when a single channel row is selected.',
+      visible: true
+    },
+    'channel-viewer': {
+      label: 'Channel Viewer',
+      icon: '📈',
+      where: 'Live trace area — analog graphs, digital traces, axis labels with units, time-axis dt and t0.',
+      visible: true
+    },
+    'setpoint-widget': {
+      label: 'Setpoint widget (Run/Test panel)',
+      icon: '🎛️',
+      where: 'User-editable setpoint controls — numeric entry boxes or digital toggles in the Run/Test panel.',
+      visible: true
+    },
+    'tdms-log': {
+      label: 'TDMS log artifact',
+      icon: '💾',
+      where: 'Recorded TDMS file — channel data, file metadata, plug-in TDMS group, Alarms & Events channel.',
+      visible: true
+    },
+    'errors-pane': {
+      label: 'Errors and Warnings pane',
+      icon: '⚠️',
+      where: 'Detailed errors, the error icon on the plug-in header, and the Error indicator next to Stop Test.',
+      visible: true
+    },
+    'plugin-header': {
+      label: 'Plug-in header / Command button',
+      icon: '🔘',
+      where: 'Plug-in name bar, Configure / Delete icons, and Command buttons rendered in the Properties dialog or operator panel.',
+      visible: true
+    },
+    'no-ui': {
+      label: 'No UI mapping (internal)',
+      icon: '◌',
+      where: 'Class wires, error clusters, and internal terminals with no FlexLogger UI surface.',
+      visible: false
+    }
+  };
+
+  const templates = {
+    producer: {
+      label: 'Producer',
+      walkthroughKey: 'produce',
+      methods: {
+        initialize: {
+          label: 'Initialize',
+          bdImage: 'assets/bd-full/producer_initialize.png',
+          terminals: [
+            { id: 'p-init-pluginin', vi: 'Initialize.vi', terminal: 'Plugin in / Plugin out',
+              x: 4, y: 47, w: 5, h: 9, surface: 'no-ui',
+              note: 'Required class wire carrying the Plugin.lvclass instance through dataflow. Not visible to the operator.' },
+            { id: 'p-init-timing-method', vi: 'Set Plugin Timing.vi', terminal: 'Timing Method',
+              x: 11, y: 56, w: 8, h: 8, surface: 'channel-viewer',
+              note: 'Periodic / Custom Rate / On Data Ready — sets when Process.vi is invoked. Visible indirectly as the channel update rate in the Channel Viewer.' },
+            { id: 'p-init-timing-period', vi: 'Set Plugin Timing.vi', terminal: 'Timing Period (ms)',
+              x: 11, y: 64, w: 8, h: 8, surface: 'channel-viewer',
+              note: 'Cadence of plug-in execution in milliseconds. Visible indirectly as channel update rate.' },
+            { id: 'p-init-name-string', vi: 'Plugin Write String.vi', terminal: 'Name ("Device Name")',
+              x: 26, y: 41, w: 11, h: 7, surface: 'plugin-properties',
+              note: 'Label of the text-entry control in the plug-in Properties dialog. Also the unique key for the matching Read VI.',
+              impact: 'Changing this after a project is saved breaks any user-saved values for that control.' },
+            { id: 'p-init-value-string', vi: 'Plugin Write String.vi', terminal: 'Value ("myDevice")',
+              x: 24, y: 60, w: 8, h: 9, surface: 'plugin-properties',
+              note: 'Default string contents pre-populated in the text field.' },
+            { id: 'p-init-default-name', vi: 'Create Channel_v2 VI', terminal: 'Default Channel Name ("Channel%d")',
+              x: 53, y: 70, w: 9, h: 8, surface: 'channel-spec',
+              note: 'Initial value of the Name column in the Channel Specification when the plug-in is first added.',
+              impact: 'User can rename the channel; the displayed name updates everywhere — graphs, mappings, TDMS column headers — so plug-in code must reference the Unique Channel Identifier, not the Name.' },
+            { id: 'p-init-direction', vi: 'Create Channel_v2 VI', terminal: 'Mode ("Produced by Plugin")',
+              x: 65, y: 78, w: 14, h: 8, surface: 'channel-spec',
+              note: 'Sets channel direction. Producer channels appear as outgoing-data rows in the Channel Specification.' },
+            { id: 'p-init-add-channels', vi: 'Add Channels VI', terminal: 'Channels (array)',
+              x: 86, y: 47, w: 7, h: 9, surface: 'channel-spec',
+              note: 'Each channel object becomes a row under the plug-in\'s group in the Channel Specification document. Array order sets the default channel order.',
+              impact: 'Call exactly once per plug-in method. Multiple Add Channels calls in the same VI cause parameter settings to silently fail to save.' }
+          ]
+        },
+        'configure-session': {
+          label: 'Configure Session',
+          bdImage: 'assets/bd-full/producer_configure-session.png',
+          terminals: [
+            { id: 'p-cfg-validchans', vi: 'Get Valid Channels.vi', terminal: 'Channels (output)',
+              x: 11, y: 38, w: 8, h: 12, surface: 'channel-spec',
+              note: 'Returns only the channels whose Enabled checkbox is selected in the Channel Specification. Disabled channels are excluded.' },
+            { id: 'p-cfg-readname', vi: 'Plugin Read String.vi', terminal: 'Name ("Device Name")',
+              x: 25, y: 32, w: 9, h: 8, surface: 'plugin-properties',
+              note: 'Reads the current value of the matching control in the Properties dialog. No UI effect — pulls the user-entered value into the plug-in.' },
+            { id: 'p-cfg-streamtiming-t0', vi: 'Set Stream Timing.vi', terminal: 'Start Time (t0)',
+              x: 73, y: 41, w: 7, h: 9, surface: 'tdms-log',
+              note: 'Sets t0 of the waveform stored in the TDMS log and shown on the time axis of the Channel Viewer.' },
+            { id: 'p-cfg-streamtiming-dt', vi: 'Set Stream Timing.vi', terminal: 'dt(sec)',
+              x: 73, y: 50, w: 7, h: 9, surface: 'channel-viewer',
+              note: 'Sets the sample interval for streamed channel data. Visible as the rate / spacing in the Channel Viewer and TDMS waveform metadata.' }
+          ]
+        },
+        process: {
+          label: 'Process',
+          bdImage: 'assets/bd-full/producer_process.png',
+          terminals: [
+            { id: 'p-proc-writedata', vi: 'Write Data VI (2D DBL NChan NSamples)', terminal: 'Data',
+              x: 70, y: 32, w: 12, h: 18, surface: 'channel-viewer',
+              note: 'Block of samples per channel; multiple new points per trace, multiple rows in TDMS. Channel order MUST match the order of valid channels.' },
+            { id: 'p-proc-errorout', vi: 'Process.vi', terminal: 'error out',
+              x: 88, y: 38, w: 10, h: 10, surface: 'errors-pane',
+              note: 'Errors surface in the FlexLogger plug-in error log and as a red error indicator on the plug-in header.' }
+          ]
+        }
+      }
+    },
+
+    calculator: {
+      label: 'Calculator',
+      walkthroughKey: 'calculate',
+      methods: {
+        initialize: {
+          label: 'Initialize',
+          bdImage: 'assets/bd-full/calculator_initialize.png',
+          terminals: [
+            { id: 'c-init-resampmode', vi: 'Set Plugin Resampling.vi', terminal: 'Resampling Mode ("Custom Rate")',
+              x: 18, y: 42, w: 11, h: 8, surface: 'channel-viewer',
+              note: 'Controls how multi-rate inputs are aligned. Affects the effective sample rate of derived-time producer channels — visible as the dt / time spacing on those channels.' },
+            { id: 'c-init-resamprate', vi: 'Set Plugin Resampling.vi', terminal: 'Resampling Rate (100)',
+              x: 21, y: 60, w: 5, h: 8, surface: 'channel-viewer',
+              note: 'Forced sample rate when Custom Rate is selected. Visible as the dt of derived producer channels.' },
+            { id: 'c-init-selectchannels', vi: 'Plugin Write N Channel.vi', terminal: 'Name ("Select Channels")',
+              x: 32, y: 44, w: 11, h: 8, surface: 'plugin-properties',
+              note: 'Label of the multi-channel selector control in the plug-in Properties dialog. User maps multiple FlexLogger channels into the plug-in via this selector.' },
+            { id: 'c-init-calctype-name', vi: 'Plugin Write Enum.vi', terminal: 'Name ("Calculation Type")',
+              x: 47, y: 64, w: 11, h: 7, surface: 'plugin-properties',
+              note: 'Label of a drop-down (combo box) in the plug-in Properties dialog.' },
+            { id: 'c-init-calctype-values', vi: 'Plugin Write Enum.vi', terminal: 'Possible Values (Minimum / Maximum)',
+              x: 49, y: 39, w: 9, h: 11, surface: 'plugin-properties',
+              note: 'Items displayed in the drop-down list. Order is preserved.' },
+            { id: 'c-init-defaultname', vi: 'Create Channel_v2 VI (Derived Time Producer)', terminal: 'Default Channel Name ("Calc")',
+              x: 64, y: 44, w: 5, h: 8, surface: 'channel-spec',
+              note: 'Initial value of the Name column for the calculator output in the Channel Specification.' },
+            { id: 'c-init-displaygroup', vi: 'Create Channel_v2 VI (Derived Time Producer)', terminal: 'Display Group ("Calculated Result")',
+              x: 70, y: 47, w: 14, h: 8, surface: 'channel-spec',
+              note: 'Collapsible section heading the channel is filed under in the Channel Specification.' },
+            { id: 'c-init-resampler-mode', vi: 'Create Channel_v2 VI (Derived Time Producer)', terminal: 'Mode ("Produced by Plugin (Resampler timing)")',
+              x: 75, y: 65, w: 18, h: 8, surface: 'channel-spec',
+              note: 'Output channel uses Resampler timing — auto-adapts to input rate changes when Resampling Mode is Minimum or Maximum.' }
+          ]
+        },
+        'configure-session': {
+          label: 'Configure Session',
+          bdImage: 'assets/bd-full/calculator_configure-session.png',
+          terminals: [
+            { id: 'c-cfg-readcalc', vi: 'Plugin Read Enum.vi', terminal: 'Name ("Calculation Type")',
+              x: 27, y: 30, w: 22, h: 22, surface: 'plugin-properties',
+              note: 'Reads the current value of the Calculation Type drop-down set by the user. Stored in plug-in private data for use in Process.vi.' }
+          ]
+        },
+        process: {
+          label: 'Process',
+          bdImage: 'assets/bd-full/calculator_process.png',
+          terminals: [
+            { id: 'c-proc-readwfm', vi: 'Read 1D Wfm (DBL)_v2 VI', terminal: 'Unique Identifiers',
+              x: 16, y: 28, w: 16, h: 24, surface: 'no-ui',
+              note: 'Selects which channels\' data to pull from FlexLogger\'s stream. Output is consumed by the plug-in — not visible in FlexLogger UI.' },
+            { id: 'c-proc-writedata', vi: 'Write Data VI', terminal: 'Data',
+              x: 70, y: 28, w: 16, h: 24, surface: 'channel-viewer',
+              note: 'Writes the calculation result to the output channel. Appears as a new trace on the Channel Viewer and a row in TDMS.' }
+          ]
+        },
+        cleanup: {
+          label: 'Cleanup Session',
+          bdImage: 'assets/bd-full/consumer_cleanup.png',
+          bdNote: 'Cleanup Session.vi structure is identical across templates — the calculator BD reuses the same generic cleanup pattern shown here.',
+          terminals: [
+            { id: 'c-clean-pluginpass', vi: 'Cleanup Session.vi', terminal: 'Plugin in / Plugin out',
+              x: 4, y: 33, w: 9, h: 13, surface: 'no-ui',
+              note: 'Class wire carries plug-in private data through cleanup — no FlexLogger UI element.' }
+          ]
+        }
+      }
+    },
+
+    consumer: {
+      label: 'Consumer',
+      walkthroughKey: 'consume',
+      methods: {
+        initialize: {
+          label: 'Initialize',
+          bdImage: 'assets/bd-full/consumer_initialize.png',
+          terminals: [
+            { id: 's-init-timingmethod', vi: 'Set Plugin Timing.vi', terminal: 'Timing Method ("On Data Ready")',
+              x: 9, y: 49, w: 9, h: 9, surface: 'no-ui',
+              note: '"On Data Ready" means Process.vi is called when FlexLogger sends new channel data to the plug-in. Indirect runtime effect — no specific UI widget.' },
+            { id: 's-init-name-string', vi: 'Plugin Write String.vi', terminal: 'Name ("Device Name")',
+              x: 26, y: 35, w: 11, h: 7, surface: 'plugin-properties',
+              note: 'Label of the text-entry control in the plug-in Properties dialog.',
+              impact: 'Changing this after a project is saved breaks any user-saved values for that control.' },
+            { id: 's-init-channelname', vi: 'Create Channel_v2 VI (Setpoint Consumer)', terminal: 'Default Channel Name ("Output Level %d")',
+              x: 56, y: 60, w: 13, h: 8, surface: 'channel-spec',
+              note: 'Initial name shown in the Channel Specification AND on the setpoint control in the Run/Test panel.' },
+            { id: 's-init-mode', vi: 'Create Channel_v2 VI (Setpoint Consumer)', terminal: 'Mode ("Setpoint consumed by Plugin")',
+              x: 56, y: 79, w: 19, h: 8, surface: 'setpoint-widget',
+              note: 'Setpoint channels render as user-editable controls in the Run/Test panel rather than as outgoing trace channels.' }
+          ]
+        },
+        'configure-session': {
+          label: 'Configure Session',
+          bdImage: 'assets/bd-full/consumer_configure-session.png',
+          terminals: [
+            { id: 's-cfg-validchans', vi: 'Get Valid Channels.vi', terminal: 'Channels (output)',
+              x: 11, y: 36, w: 8, h: 12, surface: 'channel-spec',
+              note: 'Returns only the channels whose Enabled checkbox is selected in the Channel Specification.' },
+            { id: 's-cfg-readname', vi: 'Plugin Read String.vi', terminal: 'Name ("Device Name")',
+              x: 25, y: 30, w: 9, h: 8, surface: 'plugin-properties',
+              note: 'Reads the current Device Name string from the plug-in Properties dialog.' }
+          ]
+        },
+        process: {
+          label: 'Process',
+          bdImage: 'assets/bd-full/consumer_process.png',
+          terminals: [
+            { id: 's-proc-readsetpoints', vi: 'Read Latest Setpoints By Channel Identifier VI', terminal: 'Channel Setpoints (output)',
+              x: 12, y: 36, w: 13, h: 18, surface: 'setpoint-widget',
+              note: 'Reads the current values from setpoint controls. Output is the latest user-entered value visible in the Run/Test panel.' }
+          ]
+        },
+        cleanup: {
+          label: 'Cleanup Session',
+          bdImage: 'assets/bd-full/consumer_cleanup.png',
+          terminals: [
+            { id: 's-clean-pluginpass', vi: 'Cleanup Session.vi', terminal: 'Plugin in / Plugin out',
+              x: 4, y: 33, w: 9, h: 13, surface: 'no-ui',
+              note: 'Class wire carries plug-in private data through cleanup — no FlexLogger UI element.' },
+            { id: 's-clean-devicehandle', vi: 'Cleanup Session.vi', terminal: 'device handle (private data)',
+              x: 28, y: 39, w: 13, h: 10, surface: 'no-ui',
+              note: 'Hardware reference stored in class private data during Configure Session is closed here.' }
+          ]
+        }
+      }
+    }
+  };
+
+  const cheatsheet = [
+    // Common
+    { vi: 'All PDK VIs', terminal: 'Plugin in / Plugin out', surface: 'no-ui', scope: 'init', category: 'Common', note: 'Required class wire — carries the Plugin.lvclass instance. Not visible in FlexLogger UI.' },
+    { vi: 'All channel-scoped VIs', terminal: 'Channel in / Channel out', surface: 'no-ui', scope: 'init', category: 'Common', note: 'Required class wire carrying a Channel.lvclass instance.' },
+    { vi: 'All PDK VIs', terminal: 'error in / error out', surface: 'errors-pane', scope: 'process', category: 'Common', note: 'Errors surface in the plug-in error log and as a red error indicator on the plug-in header.' },
+    { vi: 'Read * VIs', terminal: 'Found (output)', surface: 'no-ui', scope: 'config', category: 'Common', note: 'TRUE if the named parameter exists; use to handle the case where the user has not yet configured the control.' },
+
+    // Channel Management
+    { vi: 'Add Channels VI', terminal: 'Channels (array of Channel.lvclass)', surface: 'channel-spec', scope: 'init', category: 'Channel Management', note: 'Each channel becomes a row under the plug-in\'s group in the Channel Specification.' },
+    { vi: 'Get Valid Channels VI', terminal: 'Channels (output)', surface: 'channel-spec', scope: 'process', category: 'Channel Management', note: 'Reflects channels with Enabled checked in the Channel Specification.' },
+    { vi: 'Remove Channels VI', terminal: 'Unique Channel Identifiers to Delete', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Removes the corresponding rows from the plug-in\'s group in the Channel Specification.' },
+    { vi: 'Replace Producer Channels VI', terminal: 'Producer Channels', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Replaces every producer-channel row under the plug-in.', impact: 'Calling unconditionally from Configure Session/Process creates an infinite reconfiguration loop.' },
+    { vi: 'Replace Channel Group VI', terminal: 'Group Name', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Identifies which Display Group to replace.' },
+    { vi: 'Replace Channel Group VI', terminal: 'Channels', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Replaces every channel row under the named group.' },
+    { vi: 'Update Channels Unit VI', terminal: 'Channels Unique Identifier', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Selects affected channels by unique identifier.' },
+    { vi: 'Update Channels Unit VI', terminal: 'Unit', surface: 'channel-spec', scope: 'config', category: 'Channel Management', note: 'Updates Unit column, Channel Viewer axis labels, and TDMS unit metadata without re-running Configure Session.' },
+
+    // Channel Creation
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Data Type', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Sets Data Type column / icon and how FlexLogger renders the channel (analog graph / digital trace / string event).' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Display Group', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Collapsible group heading channels are filed under in the Channel Specification.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Unique Channel Identifier', surface: 'no-ui', scope: 'init', category: 'Channel Creation', note: 'Internal ID — not directly shown in FlexLogger UI. Used by Read/Write/Get VIs.', impact: 'Changing this after a project is saved breaks user-mapped channel references.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Default Channel Name', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Initial value of the Name column. User can rename — name appears on graphs, mappings, TDMS column headers.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'dt(sec)', surface: 'channel-viewer', scope: 'init', category: 'Channel Creation', note: 'Sample interval visible in Channel Viewer time base and TDMS waveform metadata.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Unit', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Unit column + Channel Viewer axis labels + TDMS metadata.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Can Disable?', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Whether the user can uncheck the Enabled checkbox for this channel.' },
+    { vi: 'Create Channel_v2 VI (Producer)', terminal: 'Producer Channel (output)', surface: 'no-ui', scope: 'init', category: 'Channel Creation', note: 'Hand-off object — wire to Add Channels.' },
+    { vi: 'Create Channel_v2 VI (Setpoint Consumer)', terminal: 'Default Channel Name', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Initial name in the Channel Specification AND on the setpoint control in the Run/Test panel.' },
+    { vi: 'Create Channel_v2 VI (Setpoint Consumer)', terminal: 'Default Value', surface: 'setpoint-widget', scope: 'init', category: 'Channel Creation', note: 'Initial value displayed in the setpoint entry box when the project loads.' },
+    { vi: 'Create Channel_v2 VI (Setpoint Consumer)', terminal: 'Unit', surface: 'setpoint-widget', scope: 'init', category: 'Channel Creation', note: 'Unit suffix shown next to the setpoint entry control.' },
+    { vi: 'Create Channel_v2 VI (Derived Time Producer)', terminal: 'Data Type / Display Group / Unit / Default Name / Unique ID / Can Disable?', surface: 'channel-spec', scope: 'init', category: 'Channel Creation', note: 'Same UI locations as Producer Channel; effective dt is determined by Set Plugin Resampling.' },
+
+    // Plug-in level params
+    { vi: 'Plugin Write Boolean VI', terminal: 'Name', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a checkbox in the plug-in Properties dialog. Also the unique key for the matching Read VI.', impact: 'Changing after project save breaks user-saved values.' },
+    { vi: 'Plugin Write Boolean VI', terminal: 'Value', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Initial / current state of the checkbox.' },
+    { vi: 'Plugin Write DBL VI', terminal: 'Name', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a numeric (double) entry field.' },
+    { vi: 'Plugin Write DBL VI', terminal: 'Value', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Default numeric value shown in the field.' },
+    { vi: 'Plugin Write I32 VI', terminal: 'Name', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of an integer entry field.' },
+    { vi: 'Plugin Write I32 VI', terminal: 'Value', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Default integer value.' },
+    { vi: 'Plugin Write String VI', terminal: 'Name', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a text entry field.' },
+    { vi: 'Plugin Write String VI', terminal: 'Value', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Default string contents.' },
+    { vi: 'Plugin Write Enum VI', terminal: 'Name', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a drop-down (combo box).' },
+    { vi: 'Plugin Write Enum VI', terminal: 'Possible Values', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Items displayed in the drop-down list (order preserved).' },
+    { vi: 'Plugin Write Enum VI', terminal: 'Current Value', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Item initially selected — must match an entry in Possible Values.' },
+    { vi: 'Plugin Write Single Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a single-channel selector — user maps ONE existing FlexLogger channel into the plug-in.' },
+    { vi: 'Plugin Write N Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a multi-channel selector — user maps MULTIPLE channels.' },
+    { vi: 'Plugin Write Single Digital Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a single-digital-channel selector.' },
+    { vi: 'Plugin Write N Digital Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'plugin-properties', scope: 'init', category: 'Plug-in Param', note: 'Label of a multi-digital-channel selector.' },
+    { vi: 'Plugin Write Command VI', terminal: 'Name', surface: 'plugin-header', scope: 'init', category: 'Plug-in Param', note: 'Caption of a button rendered in the Properties dialog or operator panel. Pressing it raises a notification handled in Handle Notification.vi.' },
+    { vi: 'Plugin Read Boolean / DBL / I32 / String / Enum VI', terminal: 'Name', surface: 'no-ui', scope: 'config', category: 'Plug-in Param', note: 'No UI effect — pulls user-entered value into the plug-in. \'Found\' indicates whether the parameter exists.' },
+    { vi: 'Plugin Read Single / N (Digital) Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'no-ui', scope: 'config', category: 'Plug-in Param', note: 'Reads the channel(s) the user mapped in the corresponding selector control.' },
+    { vi: 'Remove Parameter VI', terminal: 'Name', surface: 'plugin-properties', scope: 'config', category: 'Plug-in Param', note: 'Removes the corresponding control from the plug-in Properties dialog. Used to dynamically hide controls.' },
+
+    // Channel-level params
+    { vi: 'Channel Write Boolean VI', terminal: 'Channel in', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Selects which Channel Specification row the parameter attaches to.' },
+    { vi: 'Channel Write Boolean VI', terminal: 'Name / Value', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label and default state of a checkbox in the per-channel Properties pane.' },
+    { vi: 'Channel Write DBL VI', terminal: 'Name / Value', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label and default of a numeric field in the per-channel Properties pane.' },
+    { vi: 'Channel Write I32 VI', terminal: 'Name / Value', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label and default of an integer field in the per-channel Properties pane.' },
+    { vi: 'Channel Write String VI', terminal: 'Name / Value', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label and default text of a string field in the per-channel Properties pane.' },
+    { vi: 'Channel Write Enum VI', terminal: 'Name / Possible Values / Current Value', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label, drop-down items, and default selection of a per-channel combo box.' },
+    { vi: 'Channel Write Single Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label of a single-waveform-channel selector inside the channel\'s Properties pane. Only valid for Producer Channels — not Setpoint Channels.' },
+    { vi: 'Channel Write N Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Label of a multi-channel selector inside the channel\'s Properties pane.' },
+    { vi: 'Channel Write Single / N Digital Channel VI', terminal: 'Name (Unique Channel Identifier)', surface: 'channel-properties', scope: 'init', category: 'Channel Param', note: 'Same as analog selectors but for digital data.' },
+    { vi: 'Channel Read VIs (Boolean / DBL / I32 / String / Enum)', terminal: 'Channel in + Name', surface: 'no-ui', scope: 'config', category: 'Channel Param', note: 'No UI effect — input to plug-in logic.' },
+    { vi: 'Write Data Type VI', terminal: 'Data Type', surface: 'channel-spec', scope: 'init', category: 'Channel Param', note: 'Switches the channel between Wfm (DBL) / Wfm (Digital) / String. Changes which Read/Write VIs are valid and how the channel renders.' },
+
+    // Data
+    { vi: 'Set Stream Timing VI', terminal: 'Start Time', surface: 'tdms-log', scope: 'config', category: 'Data', note: 'Sets t0 of the waveform stored in the TDMS log and shown on the time axis of the Channel Viewer.' },
+    { vi: 'Set Stream Timing VI', terminal: 'dt(sec)', surface: 'channel-viewer', scope: 'config', category: 'Data', note: 'Sample interval — visible as the rate / spacing in the Channel Viewer and TDMS waveform metadata.' },
+    { vi: 'Read 1D Wfm (DBL)_v2 VI', terminal: 'Unique Identifiers (empty = all)', surface: 'no-ui', scope: 'process', category: 'Data', note: 'Selects which channels\' data to pull from FlexLogger\'s stream. Output consumed by the plug-in.' },
+    { vi: 'Read 1D Wfm (Digital) VI', terminal: 'Unique Channel Identifiers / Digital Waveforms', surface: 'no-ui', scope: 'process', category: 'Data', note: 'Same as analog Read 1D Wfm but for digital channels.' },
+    { vi: 'Read Latest Setpoints By Channel Identifier VI', terminal: 'Unique Channel Identifiers', surface: 'setpoint-widget', scope: 'process', category: 'Data', note: 'Reads the current values from setpoint controls in the Run/Test panel.' },
+    { vi: 'Read Latest Digital Setpoints By Channel Identifier VI', terminal: 'Unique Channel Identifiers', surface: 'setpoint-widget', scope: 'process', category: 'Data', note: 'Reads current digital setpoint toggle states.' },
+    { vi: 'Write 1D DBL (NChan 1Sample) VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'One sample per channel — appears as a new point on each trace in the Channel Viewer and a new row in TDMS. Order MUST match valid channels.' },
+    { vi: 'Write 2D DBL (NChan NSamples) VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'Block of samples per channel. Same channel ordering rule.' },
+    { vi: 'Write 1D Wfm (DBL)_v2 VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'Each waveform\'s t0 and dt set timestamps in the Channel Viewer and TDMS.' },
+    { vi: 'Write 1D Wfm (DBL)_v2 VI', terminal: 'Auto Calculate T0', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'TRUE = auto-align t0 from previous block. FALSE = use t0 in data.', impact: 'FALSE requires perfectly continuous t0 values; otherwise the VI returns an error rather than silently aligning.' },
+    { vi: 'Write 1D / 2D Bool (NChan ...) VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'Boolean samples appear as digital state in the Channel Viewer.' },
+    { vi: 'Write 1D Wfm (Digital)_v2 VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'Digital waveform — appears as a digital trace in the Channel Viewer and digital channel in TDMS.' },
+    { vi: 'Write 1D STR (NChan 1 Sample) VI', terminal: 'Data', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'String sample per channel — appears as a string event in the channel viewer / Alarms & Events column.' },
+    { vi: 'Write 1D STR (NChan 1 Sample) VI', terminal: 'Time Stamps', surface: 'channel-viewer', scope: 'process', category: 'Data', note: 'Timestamps for each string sample on the time axis. If empty, FlexLogger derives them from Set Stream Timing.' },
+
+    // Advanced
+    { vi: 'Set Plugin Timing VI', terminal: 'Timing Method', surface: 'channel-viewer', scope: 'init', category: 'Advanced', note: 'Periodic / Custom Rate / On Data Ready / Triggered (reserved). Determines when Process.vi is invoked. Visible indirectly as channel update rate.' },
+    { vi: 'Set Plugin Timing VI', terminal: 'Timing Period (ms)', surface: 'channel-viewer', scope: 'init', category: 'Advanced', note: 'Cadence of plug-in execution — used by Periodic and as a timeout for On Data Ready.' },
+    { vi: 'Set Plugin Resampling VI', terminal: 'Resampling Mode', surface: 'channel-viewer', scope: 'init', category: 'Advanced', note: 'Affects effective sample rate of derived-time producer channels — visible as dt / time spacing in the Channel Viewer and TDMS file.' },
+    { vi: 'Set Plugin Resampling VI', terminal: 'Resampling Rate (Hz)', surface: 'channel-viewer', scope: 'init', category: 'Advanced', note: 'Forced sample rate when Custom Rate is selected.' },
+    { vi: 'Set Plugin Resampling VI', terminal: 'Block Size (s)', surface: 'channel-viewer', scope: 'init', category: 'Advanced', note: 'Internal — affects responsiveness/latency. Smaller block = lower latency, more frequent calls.' },
+    { vi: 'Set Plugin Resampling VI', terminal: 'Drift Tolerance (s)', surface: 'no-ui', scope: 'init', category: 'Advanced', note: 'Internal — affects memory usage and how the plug-in handles asynchronous input streams. No direct UI element.' },
+    { vi: 'Get Setpoint(s) / Get Digital Setpoint(s) VI', terminal: 'Unique Identifier', surface: 'no-ui', scope: 'process', category: 'Advanced', note: 'Utility VIs for filtering returned arrays. No UI.' },
+    { vi: 'Get Waveform(s) / Get Digital Waveform(s) VI', terminal: 'Unique Identifier', surface: 'no-ui', scope: 'process', category: 'Advanced', note: 'Utility — use \'channelID:waveformParam\' to pick a specific channel waveform.' },
+    { vi: 'Write Use Immediate Device Dialog VI', terminal: 'Use Immediate Device Dialog?', surface: 'plugin-properties', scope: 'init', category: 'Advanced', note: 'TRUE = each control change immediately re-runs Configure Session (live updates). FALSE (default) = changes apply on OK.' },
+    { vi: 'Set File Metadata VI', terminal: 'Metadata (Name / Value array)', surface: 'tdms-log', scope: 'config', category: 'Advanced', note: 'Top-level TDMS file properties — visible in TDMS Viewer / DIAdem. Filed under a TDMS group named after the plug-in display name.' },
+    { vi: 'Log Event VI', terminal: 'Message', surface: 'tdms-log', scope: 'process', category: 'Advanced', note: 'Appears as an entry in the Alarms and Events channel of the TDMS log file (and the Events list in FlexLogger Run Mode).' },
+    { vi: 'Write Trace Log VI', terminal: 'Message', surface: 'no-ui', scope: 'process', category: 'Advanced', note: 'Appears in DebugView (Microsoft Sysinternals) — NOT in FlexLogger UI. Developer-only.' }
+  ];
+
+  return { surfaces, templates, cheatsheet };
+})();
+
+let bdCurrentTemplate = 'producer';
+let bdCurrentMethod = 'initialize';
+let bdActiveTerminal = null;
+
+function bdEscapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+function bdScopeForMethod(method) {
+  if (method === 'initialize') return 'init';
+  if (method === 'configure-session') return 'config';
+  if (method === 'cleanup') return 'cleanup';
+  return 'process';
+}
+
+function bdSetTemplate(tpl) {
+  bdCurrentTemplate = tpl;
+  const methods = Object.keys(BD_UI_MAP.templates[tpl].methods);
+  if (!methods.includes(bdCurrentMethod)) bdCurrentMethod = methods[0];
+  bdActiveTerminal = null;
+  bdRender();
+}
+
+function bdSetMethod(m) {
+  bdCurrentMethod = m;
+  bdActiveTerminal = null;
+  bdRender();
+}
+
+function bdSetTerminal(id) {
+  bdActiveTerminal = (bdActiveTerminal === id) ? null : id;
+  bdRender();
+}
+
+function bdJumpToWalkthrough() {
+  const tpl = BD_UI_MAP.templates[bdCurrentTemplate];
+  if (tpl && tpl.walkthroughKey && typeof launchWalkthrough === 'function') {
+    launchWalkthrough(tpl.walkthroughKey);
+  }
+}
+
+function bdRender() {
+  const tplData = BD_UI_MAP.templates[bdCurrentTemplate];
+  const methodData = tplData.methods[bdCurrentMethod];
+
+  // Template segmented control
+  document.querySelectorAll('.bd-ui-seg.tpl button').forEach(b => {
+    b.classList.toggle('active', b.dataset.template === bdCurrentTemplate);
+  });
+
+  // Method segmented control — rebuild because methods vary by template
+  const methodSeg = document.getElementById('bd-ui-method-seg');
+  const methods = Object.keys(tplData.methods);
+  methodSeg.innerHTML = methods.map(m =>
+    '<button data-method="' + m + '" class="' + (m === bdCurrentMethod ? 'active' : '') + '">'
+    + bdEscapeHTML(tplData.methods[m].label) + '</button>'
+  ).join('');
+  methodSeg.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => bdSetMethod(btn.dataset.method));
+  });
+
+  // BD pane
+  const bdCanvas = document.getElementById('bd-ui-bd-canvas');
+  const terminals = methodData.terminals || [];
+  const bdNote = methodData.bdNote
+    ? '<div class="bd-ui-bd-note">' + bdEscapeHTML(methodData.bdNote) + '</div>'
+    : '';
+  let html = bdNote + '<div class="bd-ui-bd-wrap" id="bd-ui-bd-wrap">'
+    + '<img class="bd-ui-bd-img" src="' + bdEscapeHTML(methodData.bdImage)
+    + '" alt="' + bdEscapeHTML(tplData.label + ' ' + methodData.label + ' block diagram') + '">';
+  terminals.forEach(t => {
+    const surface = BD_UI_MAP.surfaces[t.surface];
+    const isInvisible = surface && !surface.visible;
+    const isActive = t.id === bdActiveTerminal;
+    html += '<button class="bd-ui-hotspot'
+      + (isInvisible ? ' invisible-mapping' : '')
+      + (isActive ? ' active' : '')
+      + '" style="left:' + t.x + '%;top:' + t.y + '%;width:' + t.w + '%;height:' + t.h + '%"'
+      + ' data-terminal="' + t.id + '"'
+      + ' title="' + bdEscapeHTML(t.vi + ' — ' + t.terminal) + '"></button>';
+  });
+  html += '</div>';
+  bdCanvas.innerHTML = html;
+  bdCanvas.querySelectorAll('.bd-ui-hotspot').forEach(h => {
+    h.addEventListener('click', () => bdSetTerminal(h.dataset.terminal));
+  });
+
+  // UI surfaces pane
+  const uiCanvas = document.getElementById('bd-ui-ui-canvas');
+  const activeTerm = terminals.find(t => t.id === bdActiveTerminal);
+  uiCanvas.innerHTML = '<div class="bd-ui-surface-list">'
+    + Object.entries(BD_UI_MAP.surfaces).map(([key, s]) => {
+        const isActive = activeTerm && activeTerm.surface === key;
+        return '<div class="bd-ui-surface' + (s.visible ? '' : ' invisible')
+          + (isActive ? ' active' : '') + '" data-surface="' + key + '">'
+          + '<div class="bd-ui-surface-head">'
+          + '<span class="bd-ui-surface-icon">' + s.icon + '</span>'
+          + '<span>' + bdEscapeHTML(s.label) + '</span>'
+          + '</div>'
+          + '<div class="bd-ui-surface-body">'
+          + '<div class="bd-ui-surface-placeholder">[screenshot pending<br>see assets/fl-ui/SCREENSHOTS-NEEDED.md]</div>'
+          + '<div class="bd-ui-surface-affects">' + bdEscapeHTML(s.where) + '</div>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+    + '</div>';
+  uiCanvas.querySelectorAll('.bd-ui-surface').forEach(el => {
+    el.addEventListener('click', () => {
+      const surfaceKey = el.dataset.surface;
+      const term = terminals.find(t => t.surface === surfaceKey);
+      if (term) bdSetTerminal(term.id);
+    });
+  });
+
+  // Active terminal info card
+  const info = document.getElementById('bd-ui-info');
+  if (activeTerm) {
+    const surface = BD_UI_MAP.surfaces[activeTerm.surface];
+    const scope = bdScopeForMethod(bdCurrentMethod);
+    info.innerHTML = ''
+      + '<div class="bd-ui-info-vi">' + bdEscapeHTML(activeTerm.vi) + '</div>'
+      + '<div class="bd-ui-info-term">' + bdEscapeHTML(activeTerm.terminal) + '</div>'
+      + '<div class="bd-ui-info-meta">'
+      +   '<span class="bd-ui-badge scope-' + scope + '">' + bdEscapeHTML(methodData.label) + '</span>'
+      +   '<span class="bd-ui-badge ' + (surface.visible ? '' : 'invisible') + '">→ ' + bdEscapeHTML(surface.label) + '</span>'
+      + '</div>'
+      + '<div class="bd-ui-info-note">' + bdEscapeHTML(activeTerm.note) + '</div>'
+      + (activeTerm.impact
+          ? '<div class="bd-ui-info-impact"><strong>⚠ Change-impact:</strong> ' + bdEscapeHTML(activeTerm.impact) + '</div>'
+          : '')
+      + '<button class="bd-ui-info-jump" onclick="bdJumpToWalkthrough()">'
+      +   '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>'
+      +   'Jump to ' + bdEscapeHTML(tplData.label) + ' walkthrough'
+      + '</button>';
+    info.classList.add('active');
+  } else {
+    info.classList.remove('active');
+    info.innerHTML = '';
+  }
+}
+
+function bdRenderCheatsheet() {
+  const searchEl = document.getElementById('bd-ui-search');
+  const catEl = document.getElementById('bd-ui-filter-cat');
+  const surfEl = document.getElementById('bd-ui-filter-surface');
+  if (!searchEl || !catEl || !surfEl) return;
+  const search = (searchEl.value || '').toLowerCase().trim();
+  const cat = catEl.value;
+  const surf = surfEl.value;
+  const rows = BD_UI_MAP.cheatsheet.filter(r => {
+    if (cat && r.category !== cat) return false;
+    if (surf && r.surface !== surf) return false;
+    if (search) {
+      const hay = (r.vi + ' ' + r.terminal + ' ' + r.note).toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  const tbody = document.getElementById('bd-ui-cs-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="bd-ui-cs-empty">No matches. Try a different search or filter.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => {
+    const surface = BD_UI_MAP.surfaces[r.surface];
+    return '<tr>'
+      + '<td><span class="bd-ui-cs-vi">' + bdEscapeHTML(r.vi) + '</span></td>'
+      + '<td><span class="bd-ui-cs-term">' + bdEscapeHTML(r.terminal) + '</span></td>'
+      + '<td>' + surface.icon + ' ' + bdEscapeHTML(surface.label) + '</td>'
+      + '<td><span class="bd-ui-badge scope-' + r.scope + '">' + bdEscapeHTML(r.scope) + '</span></td>'
+      + '<td>' + bdEscapeHTML(r.note)
+      +   (r.impact ? '<div style="margin-top:4px;font-size:11px;color:var(--lv-yellow);"><strong>⚠</strong> ' + bdEscapeHTML(r.impact) + '</div>' : '')
+      + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+(function bdInit() {
+  document.querySelectorAll('.bd-ui-seg.tpl button').forEach(b => {
+    b.addEventListener('click', () => bdSetTemplate(b.dataset.template));
+  });
+  ['bd-ui-search', 'bd-ui-filter-cat', 'bd-ui-filter-surface'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', bdRenderCheatsheet);
+  });
+  bdRender();
+  bdRenderCheatsheet();
+})();
 </script>
 </body>
 </html>
